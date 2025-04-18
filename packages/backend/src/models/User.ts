@@ -193,3 +193,30 @@ export interface LoginResponse {
   token: string;
   user: UserResponse;
 }
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     UpdateUserDTO:
+ *       type: object
+ *       required:
+ *         - current_password
+ *       properties:
+ *         name:
+ *           type: string
+ *           description: 변경할 사용자 이름
+ *         new_password:
+ *           type: string
+ *           format: password
+ *           description: 변경할 비밀번호(최소 8자 이상)
+ *         current_password:
+ *           type: string
+ *           format: password
+ *           description: 현재 비밀번호(인증 확인용)
+ */
+export interface UpdateUserDTO {
+  name?: string;
+  new_password?: string;
+  current_password: string;
+}

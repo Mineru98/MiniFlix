@@ -228,3 +228,46 @@ export interface ContentDetailResponse {
 export interface WishlistToggleResponse {
   is_wished: boolean;
 }
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     WishlistResponseDTO:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: 콘텐츠 고유 식별자
+ *         title:
+ *           type: string
+ *           description: 콘텐츠 제목
+ *         thumbnail_url:
+ *           type: string
+ *           description: 썸네일 이미지 경로
+ *         release_year:
+ *           type: integer
+ *           description: 출시 연도
+ */
+export interface WishlistResponseDTO {
+  id: number;
+  title: string;
+  thumbnail_url: string;
+  release_year: number;
+}
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     WishlistResponse:
+ *       type: object
+ *       properties:
+ *         wishlists:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/WishlistResponseDTO'
+ */
+export interface WishlistResponse {
+  wishlists: WishlistResponseDTO[];
+}

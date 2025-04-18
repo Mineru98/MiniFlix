@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { AppDataSource } from "../config/database";
+import { Content, WishlistResponseDTO } from "../models/Content";
 import {
   LoginResponse,
   User,
@@ -8,6 +9,7 @@ import {
   UserLoginDTO,
   UserResponse,
 } from "../models/User";
+import { Wishlist } from "../models/Wishlist";
 import {
   ConflictError,
   ForbiddenError,
@@ -16,6 +18,8 @@ import {
 
 export class UserService {
   private userRepository = AppDataSource.getRepository(User);
+  private wishlistRepository = AppDataSource.getRepository(Wishlist);
+  private contentRepository = AppDataSource.getRepository(Content);
 
   async createUser(userData: UserCreationAttributes): Promise<UserResponse> {
     // 이메일 중복 확인
@@ -106,5 +110,39 @@ export class UserService {
       token,
       user: userResponse,
     };
+  }
+
+  /**
+   * 사용자의 찜 목록을 조회합니다.
+   *
+   * @param userId 사용자 ID
+   * @returns 찜한 콘텐츠 정보 배열
+   */
+  async fetchWishlist(userId: number): Promise<WishlistResponseDTO[]> {
+    // 사용자가 존재하는지 확인
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new UnauthorizedError("존재하지 않는 사용자입니다.");
+    }
+
+    // 해당 사용자의 찜 목록 조회
+    const wishlists = await this.wishlistRepository.find({
+      where: { user: { id: userId } },
+      relations: ["content"],
+    });
+
+    // 콘텐츠 정보만 추출하여 반환
+    return wishlists.map((wishlist) => {
+      const content = wishlist.content;
+      return {
+        id: content.id,
+        title: content.title,
+        thumbnail_url: content.thumbnail_url,
+        release_year: content.release_year,
+      };
+    });
   }
 }

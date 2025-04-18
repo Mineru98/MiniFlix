@@ -113,6 +113,40 @@ export class UserService {
   }
 
   /**
+   * 사용자의 계정 정보를 조회합니다.
+   *
+   * @param userId 사용자 ID
+   * @returns 사용자 정보 객체
+   */
+  async getUserInfo(userId: number): Promise<UserResponse> {
+    // 사용자 조회
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    // 사용자가 존재하지 않는 경우
+    if (!user) {
+      throw new UnauthorizedError("존재하지 않는 사용자입니다.");
+    }
+
+    // 계정이 비활성화된 경우
+    if (!user.is_active) {
+      throw new ForbiddenError("비활성화된 계정입니다.");
+    }
+
+    // 응답 데이터 생성
+    const userResponse: UserResponse = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      created_at: user.created_at,
+      is_active: user.is_active,
+    };
+
+    return userResponse;
+  }
+
+  /**
    * 사용자의 찜 목록을 조회합니다.
    *
    * @param userId 사용자 ID

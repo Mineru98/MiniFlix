@@ -22,6 +22,11 @@ export class UserController {
     this.router.post("/", this.createUser.bind(this));
     this.router.post("/login", this.login.bind(this));
     this.router.get(
+      "/profile",
+      passport.authenticate("jwt", { session: false }),
+      this.getProfile.bind(this)
+    );
+    this.router.get(
       "/wishlist",
       passport.authenticate("jwt", { session: false }),
       this.getWishlist.bind(this)
@@ -103,6 +108,52 @@ export class UserController {
         return;
       }
       throw error;
+    }
+  }
+
+  /**
+   * @swagger
+   * /api/users/profile:
+   *   get:
+   *     summary: 사용자의 계정 정보를 조회합니다.
+   *     description: 로그인한 사용자의 계정 정보를 조회합니다.
+   *     tags: [Users]
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: 계정 정보 조회 성공
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/UserResponse'
+   *       401:
+   *         description: 인증 토큰이 만료되었거나 유효하지 않음
+   *       403:
+   *         description: 비활성화된 계정
+   *       500:
+   *         description: 서버 에러
+   */
+  public async getProfile(req: Request, res: Response): Promise<void> {
+    try {
+      // JWT 인증 미들웨어를 통과한 경우 req.user에 사용자 정보가 있음
+      const userId = (req.user as any).id;
+
+      const userProfile = await this.userService.getUserInfo(userId);
+
+      res.status(200).json(userProfile);
+    } catch (error) {
+      if (error instanceof UnauthorizedError) {
+        res.status(401).json({ message: error.message });
+        return;
+      }
+      if (error instanceof ForbiddenError) {
+        res.status(403).json({ message: error.message });
+        return;
+      }
+
+      console.error("계정 정보 조회 실패:", error);
+      res.status(500).json({ message: "서버 에러가 발생했습니다." });
     }
   }
 

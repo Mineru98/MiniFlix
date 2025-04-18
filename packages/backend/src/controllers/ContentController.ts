@@ -90,16 +90,24 @@ export class ContentController {
       // JWT 인증 미들웨어를 통과한 경우 req.user에 사용자 정보가 있음
       const userId = req.user ? (req.user as any).id : undefined;
 
-      const contents = await this.contentService.getContentsByGenre(
-        genreId,
-        userId
-      );
+      try {
+        const contents = await this.contentService.getContentsByGenre(
+          genreId,
+          userId
+        );
 
-      const response: ContentListResponse = {
-        contents,
-      };
+        const response: ContentListResponse = {
+          contents,
+        };
 
-      res.status(200).json(response);
+        res.status(200).json(response);
+      } catch (error: any) {
+        if (error.message === "존재하지 않는 장르입니다.") {
+          res.status(404).json({ message: error.message });
+        } else {
+          throw error;
+        }
+      }
     } catch (error) {
       console.error("장르별 콘텐츠 목록 조회 실패:", error);
       res.status(500).json({ message: "서버 에러가 발생했습니다." });

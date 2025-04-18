@@ -4,6 +4,7 @@ import {
   ContentListResponseDTO,
   ContentSearchResponseDTO,
 } from "../models/Content";
+import { Genre } from "../models/Genre";
 import { Wishlist } from "../models/Wishlist";
 
 export class ContentService {
@@ -66,6 +67,13 @@ export class ContentService {
     userId?: number
   ): Promise<ContentListResponseDTO[]> {
     const entityManager = getManager();
+    const genreRepository = getRepository(Genre);
+
+    // 장르가 존재하는지 확인
+    const genre = await genreRepository.findOne({ where: { id: genreId } });
+    if (!genre) {
+      throw new Error("존재하지 않는 장르입니다.");
+    }
 
     // 장르별 콘텐츠 조회 (ContentGenre 조인)
     const contents = await entityManager.query(

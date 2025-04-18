@@ -139,16 +139,54 @@ describe("콘텐츠 API 테스트", () => {
   });
 
   describe("GET /api/contents/genre/:genreId", () => {
-    it("장르별로 콘텐츠를 필터링할 수 있어야 함", async () => {
+    const mockContents = [
+      {
+        id: 1,
+        title: "액션 영화 1",
+        thumbnail_url: "/thumbnails/action1.jpg",
+        release_year: 2020,
+      },
+      {
+        id: 2,
+        title: "액션 영화 2",
+        thumbnail_url: "/thumbnails/action2.jpg",
+        release_year: 2021,
+      },
+      {
+        id: 3,
+        title: "액션 영화 3",
+        thumbnail_url: "/thumbnails/action3.jpg",
+        release_year: 2022,
+      },
+    ];
+
+    const mockWishlists = [{ content: { id: 1 } }];
+
+    beforeEach(() => {
       // getManager().query 모킹
       const queryMock = jest.fn().mockResolvedValue(mockContents);
-      (getRepository as jest.Mock)().find.mockResolvedValue(mockWishlists);
-
       const managerMock = {
         query: queryMock,
       };
       require("typeorm").getManager.mockReturnValue(managerMock);
 
+      // Genre 리포지토리 모킹
+      (getRepository as jest.Mock).mockImplementation((entity) => {
+        if (entity.name === "Genre") {
+          return {
+            findOne: jest.fn().mockResolvedValue({ id: 1, name: "액션" }),
+          };
+        }
+        if (entity.name === "Wishlist") {
+          return {
+            find: jest.fn().mockResolvedValue(mockWishlists),
+          };
+        }
+        return {};
+      });
+    });
+
+    it("장르별로 콘텐츠를 필터링할 수 있어야 함", async () => {
       const response = await request(app)
         .get("/api/contents/genre/1")
         .set("Authorization", "Bearer valid-token");
@@ -156,10 +194,19 @@ describe("콘텐츠 API 테스트", () => {
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("contents");
       expect(response.body.contents).toHaveLength(3);
-      expect(queryMock).toHaveBeenCalledWith(
-        expect.stringContaining("JOIN content_genres"),
-        [1]
-      );
+      expect(response.body.contents[0]).toHaveProperty("id", 1);
+      expect(response.body.contents[0]).toHaveProperty("title", "액션 영화 1");
+      expect(response.body.contents[0]).toHaveProperty("is_wished", true);
+      expect(response.body.contents[1]).toHaveProperty("is_wished", false);
+    });
+
+    it("비로그인 상태에서 장르별로 콘텐츠를 필터링할 수 있어야 함", async () => {
+      const response = await request(app).get("/api/contents/genre/1");
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("contents");
+      expect(response.body.contents).toHaveLength(3);
+      expect(response.body.contents[0]).not.toHaveProperty("is_wished");
     });
 
     it("잘못된 장르 ID로 요청 시 400 에러를 반환해야 함", async () => {
@@ -168,6 +215,24 @@ describe("콘텐츠 API 테스트", () => {
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty("message");
       expect(response.body.message).toContain("유효하지 않은 장르 ID");
+    });
+
+    it("존재하지 않는 장르 ID로 요청 시 404 에러를 반환해야 함", async () => {
+      // Genre 리포지토리 모킹을 존재하지 않는 장르로 변경
+      (getRepository as jest.Mock).mockImplementation((entity) => {
+        if (entity.name === "Genre") {
+          return {
+            findOne: jest.fn().mockResolvedValue(null),
+          };
+        }
+        return {};
+      });
+
+      const response = await request(app).get("/api/contents/genre/999");
+
+      expect(response.status).toBe(404);
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toBe("존재하지 않는 장르입니다.");
     });
   });
 });

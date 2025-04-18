@@ -12,7 +12,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(helmet());
-app.use(compression());
+app.use(compression() as unknown as express.RequestHandler);
 
 // TSOA 라우트 등록
 RegisterRoutes(app);

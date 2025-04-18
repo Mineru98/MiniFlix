@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   frontend:
     build:
@@ -59,7 +57,10 @@ services:
     networks:
       - miniflix-network
     restart: unless-stopped
-    command: --default-authentication-plugin=mysql_native_password
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
 
   redis:
     image: redis:7.2.6-alpine3.20

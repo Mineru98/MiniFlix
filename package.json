@@ -1,0 +1,23 @@
+{
+  "name": "miniflix",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+  },
+  "devDependencies": {
+    "prettier": "^2.8.8",
+    "turbo": "^1.10.16"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+} 

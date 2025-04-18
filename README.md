@@ -87,7 +87,7 @@ docker-compose up -d
 
 2. 사용 가능한 서비스
    - 프론트엔드: http://localhost:3000
-   - 백엔드 API: http://localhost:8000
+   - 백엔드 API: http://localhost:4000
 
 ## 기본 계정
 

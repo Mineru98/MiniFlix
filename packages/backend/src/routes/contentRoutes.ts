@@ -54,4 +54,11 @@ router.post(
   contentController.updateFinalPlaybackInfo.bind(contentController)
 );
 
+// 콘텐츠 찜하기/취소 (로그인 필수)
+router.post(
+  "/:contentId/wishlist",
+  authenticate({ required: true }),
+  contentController.toggleWishlist.bind(contentController)
+);
+
 export default router;

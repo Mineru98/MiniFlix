@@ -399,4 +399,50 @@ export class ContentService {
     // 저장
     await viewingHistoryRepository.save(viewingHistory);
   }
+
+  /**
+   * 콘텐츠 찜하기 상태를 토글합니다. 이미 찜한 경우 취소하고, 찜하지 않은 경우 찜합니다.
+   *
+   * @param contentId 콘텐츠 ID
+   * @param userId 사용자 ID
+   * @returns 토글 후 찜하기 상태 (true: 찜한 상태, false: 찜하지 않은 상태)
+   */
+  async toggleWishlist(
+    contentId: number,
+    userId: number
+  ): Promise<{ is_wished: boolean }> {
+    const contentRepository = getRepository(Content);
+    const wishlistRepository = getRepository(Wishlist);
+
+    // 콘텐츠 확인
+    const content = await contentRepository.findOne({
+      where: { id: contentId },
+    });
+
+    if (!content) {
+      throw new Error("존재하지 않는 콘텐츠입니다.");
+    }
+
+    // 현재 찜 상태 확인
+    const wishlist = await wishlistRepository.findOne({
+      where: {
+        user: { id: userId },
+        content: { id: contentId },
+      },
+    });
+
+    // 이미 찜한 경우 찜 취소
+    if (wishlist) {
+      await wishlistRepository.remove(wishlist);
+      return { is_wished: false };
+    }
+
+    // 찜하지 않은 경우 찜하기
+    const newWishlist = new Wishlist();
+    newWishlist.user = { id: userId } as any;
+    newWishlist.content = { id: contentId } as any;
+
+    await wishlistRepository.save(newWishlist);
+    return { is_wished: true };
+  }
 }

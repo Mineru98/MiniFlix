@@ -439,4 +439,64 @@ export class ContentController {
       res.status(500).json({ message: "서버 에러가 발생했습니다." });
     }
   }
+
+  /**
+   * @swagger
+   * /api/contents/{contentId}/wishlist:
+   *   post:
+   *     tags: [콘텐츠]
+   *     summary: 콘텐츠 찜하기/취소
+   *     description: 콘텐츠를 찜하거나 이미 찜한 경우 찜 취소합니다. 로그인이 필요한 API입니다.
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: contentId
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: 콘텐츠 ID
+   *     responses:
+   *       200:
+   *         description: 찜하기/취소 성공
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/WishlistToggleResponse'
+   *       401:
+   *         description: 인증되지 않은 요청
+   *       404:
+   *         description: 콘텐츠가 존재하지 않음
+   *       500:
+   *         description: 서버 에러
+   */
+  async toggleWishlist(req: Request, res: Response): Promise<void> {
+    try {
+      // 로그인 필수이므로 req.user가 항상 존재함
+      const userId = (req.user as any).id;
+      const contentId = parseInt(req.params.contentId, 10);
+
+      if (isNaN(contentId)) {
+        res.status(400).json({ message: "유효하지 않은 콘텐츠 ID입니다." });
+        return;
+      }
+
+      try {
+        const result = await this.contentService.toggleWishlist(
+          contentId,
+          userId
+        );
+        res.status(200).json(result);
+      } catch (error: any) {
+        if (error.message === "존재하지 않는 콘텐츠입니다.") {
+          res.status(404).json({ message: error.message });
+        } else {
+          throw error;
+        }
+      }
+    } catch (error) {
+      console.error("찜하기/취소 실패:", error);
+      res.status(500).json({ message: "서버 에러가 발생했습니다." });
+    }
+  }
 }

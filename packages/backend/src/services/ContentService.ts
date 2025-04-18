@@ -1,5 +1,9 @@
-import { getManager, getRepository } from "typeorm";
-import { Content, ContentListResponseDTO } from "../models/Content";
+import { getManager, getRepository, Like } from "typeorm";
+import {
+  Content,
+  ContentListResponseDTO,
+  ContentSearchResponseDTO,
+} from "../models/Content";
 import { Wishlist } from "../models/Wishlist";
 
 export class ContentService {
@@ -103,5 +107,59 @@ export class ContentService {
         is_wished: wishedContentIds.has(content.id),
       })
     );
+  }
+
+  /**
+   * 제목 기반으로 콘텐츠를 검색합니다.
+   * 로그인 상태인 경우 사용자의 찜 목록 정보를 포함합니다.
+   *
+   * @param searchQuery 검색어
+   * @param userId 로그인한 사용자의 ID (옵션)
+   * @returns 검색된 콘텐츠 목록
+   */
+  async searchContents(
+    searchQuery: string,
+    userId?: number
+  ): Promise<ContentSearchResponseDTO[]> {
+    const contentRepository = getRepository(Content);
+
+    // 제목 기반 검색 조회
+    const contents = await contentRepository.find({
+      select: ["id", "title", "thumbnail_url", "release_year"],
+      where: {
+        title: Like(`%${searchQuery}%`),
+      },
+    });
+
+    // 비로그인 상태인 경우 기본 정보만 반환
+    if (!userId) {
+      return contents.map((content) => ({
+        id: content.id,
+        title: content.title,
+        thumbnail_url: content.thumbnail_url,
+        release_year: content.release_year,
+      }));
+    }
+
+    // 로그인 상태인 경우 찜 목록 정보 추가
+    const wishlistRepository = getRepository(Wishlist);
+    const wishlists = await wishlistRepository.find({
+      where: { user: { id: userId } },
+      relations: ["content"],
+    });
+
+    // 찜한 콘텐츠 ID 목록
+    const wishedContentIds = new Set(
+      wishlists.map((wishlist) => wishlist.content.id)
+    );
+
+    // 콘텐츠에 찜 상태 정보 추가
+    return contents.map((content) => ({
+      id: content.id,
+      title: content.title,
+      thumbnail_url: content.thumbnail_url,
+      release_year: content.release_year,
+      is_wished: wishedContentIds.has(content.id),
+    }));
   }
 }

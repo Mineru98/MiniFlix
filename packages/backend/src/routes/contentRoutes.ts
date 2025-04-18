@@ -19,4 +19,11 @@ router.get(
   contentController.getContentsByGenre.bind(contentController)
 );
 
+// 검색어로 콘텐츠 검색 (선택적 인증)
+router.get(
+  "/search",
+  authenticate({ required: false }),
+  contentController.searchContents.bind(contentController)
+);
+
 export default router;

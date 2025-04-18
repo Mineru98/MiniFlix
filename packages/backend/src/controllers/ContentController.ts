@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ContentListResponse } from "../models/Content";
+import { ContentListResponse, ContentSearchResponse } from "../models/Content";
 import { ContentService } from "../services/ContentService";
 
 export class ContentController {
@@ -102,6 +102,64 @@ export class ContentController {
       res.status(200).json(response);
     } catch (error) {
       console.error("장르별 콘텐츠 목록 조회 실패:", error);
+      res.status(500).json({ message: "서버 에러가 발생했습니다." });
+    }
+  }
+
+  /**
+   * @swagger
+   * /api/contents/search:
+   *   get:
+   *     summary: 제목으로 콘텐츠를 검색합니다.
+   *     description: 검색어와 일치하는 제목을 가진 콘텐츠를 검색합니다. 로그인한 사용자의 경우 찜 목록 정보를 포함합니다.
+   *     tags: [Contents]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: q
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: 검색어
+   *     responses:
+   *       200:
+   *         description: 콘텐츠 검색 성공
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ContentSearchResponse'
+   *       400:
+   *         description: 검색어가 없거나 유효하지 않음
+   *       401:
+   *         description: 인증 토큰이 만료되었거나 유효하지 않음
+   *       500:
+   *         description: 서버 에러
+   */
+  async searchContents(req: Request, res: Response): Promise<void> {
+    try {
+      const searchQuery = req.query.q as string;
+
+      if (!searchQuery || searchQuery.trim() === "") {
+        res.status(400).json({ message: "검색어를 입력해주세요." });
+        return;
+      }
+
+      // JWT 인증 미들웨어를 통과한 경우 req.user에 사용자 정보가 있음
+      const userId = req.user ? (req.user as any).id : undefined;
+
+      const contents = await this.contentService.searchContents(
+        searchQuery,
+        userId
+      );
+
+      const response: ContentSearchResponse = {
+        contents,
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      console.error("콘텐츠 검색 실패:", error);
       res.status(500).json({ message: "서버 에러가 발생했습니다." });
     }
   }

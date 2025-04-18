@@ -66,3 +66,13 @@ export interface UserResponse {
   created_at: Date;
   is_active: boolean;
 }
+
+export interface UserLoginDTO {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  user: UserResponse;
+}

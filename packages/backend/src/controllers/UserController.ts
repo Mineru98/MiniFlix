@@ -1,7 +1,16 @@
 import { Body, Controller, Post, Response, Route, Tags } from "tsoa";
-import { UserCreationAttributes, UserResponse } from "../models/User";
+import {
+  LoginResponse,
+  UserCreationAttributes,
+  UserLoginDTO,
+  UserResponse,
+} from "../models/User";
 import { UserService } from "../services/UserService";
-import { ValidationError } from "../utils/errors";
+import {
+  ForbiddenError,
+  UnauthorizedError,
+  ValidationError,
+} from "../utils/errors";
 
 @Route("users")
 @Tags("Users")
@@ -30,6 +39,33 @@ export class UserController extends Controller {
     } catch (error) {
       if (error instanceof ValidationError) {
         this.setStatus(400);
+        throw error;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * 사용자 로그인을 처리합니다.
+   */
+  @Post("login")
+  @Response(200, "Success")
+  @Response(401, "Unauthorized")
+  @Response(403, "Forbidden")
+  public async login(
+    @Body() requestBody: UserLoginDTO
+  ): Promise<LoginResponse> {
+    try {
+      const loginResponse = await this.userService.login(requestBody);
+      this.setStatus(200);
+      return loginResponse;
+    } catch (error) {
+      if (error instanceof UnauthorizedError) {
+        this.setStatus(401);
+        throw error;
+      }
+      if (error instanceof ForbiddenError) {
+        this.setStatus(403);
         throw error;
       }
       throw error;

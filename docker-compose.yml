@@ -23,19 +23,19 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - mysql
+      - db
       - redis
     environment:
       - NODE_ENV=production
       - PORT=8000
-      - DB_HOST=mysql
+      - DB_HOST=db
       - DB_PORT=3306
       - DB_USER=miniflix
       - DB_PASSWORD=miniflix_password
       - DB_NAME=miniflix
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - JWT_SECRET=your_jwt_secret_key_here
+      - JWT_SECRET=miniflix-secure-jwt-secret-key
       - JWT_EXPIRES_IN=1d
       - STORAGE_PATH=/app/storage
     volumes:
@@ -44,10 +44,10 @@ services:
       - miniflix-network
     restart: unless-stopped
 
-  mysql:
+  db:
     image: mysql:8.0.35
     ports:
-      - "3306:3306"
+      - "3308:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=root_password
       - MYSQL_DATABASE=miniflix
@@ -62,9 +62,9 @@ services:
     command: --default-authentication-plugin=mysql_native_password
 
   redis:
-    image: redis:alpine
+    image: redis:7.2.6-alpine3.20
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis-data:/data
     networks:

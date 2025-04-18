@@ -223,7 +223,7 @@ export interface ContentDetailResponse {
  *       properties:
  *         is_wished:
  *           type: boolean
- *           description: 찜하기 토글 후 현재 찜 상태 (true: 찜한 상태, false: 찜하지 않은 상태)
+ *           description: '찜하기 토글 후 현재 찜 상태 (true: 찜한 상태, false: 찜하지 않은 상태)'
  */
 export interface WishlistToggleResponse {
   is_wished: boolean;

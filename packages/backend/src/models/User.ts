@@ -1,3 +1,4 @@
+import { IsEmail, IsString, MinLength } from "class-validator";
 import {
   Column,
   CreateDateColumn,
@@ -20,12 +21,16 @@ export class User {
     unique: true,
     comment: "사용자 이메일(로그인 ID)",
   })
+  @IsEmail()
   email!: string;
 
   @Column({ type: "varchar", length: 255, comment: "암호화된 비밀번호" })
+  @IsString()
+  @MinLength(8)
   password_hash!: string;
 
   @Column({ type: "varchar", length: 50, comment: "사용자 이름" })
+  @IsString()
   name!: string;
 
   @CreateDateColumn({ comment: "가입일시" })
@@ -42,4 +47,22 @@ export class User {
 
   @OneToMany(() => ViewingHistory, (viewingHistory) => viewingHistory.user)
   viewingHistories!: ViewingHistory[];
+
+  constructor(partial: Partial<User>) {
+    Object.assign(this, partial);
+  }
+}
+
+export interface UserCreationAttributes {
+  email: string;
+  password: string;
+  name: string;
+}
+
+export interface UserResponse {
+  id: number;
+  email: string;
+  name: string;
+  created_at: Date;
+  is_active: boolean;
 }

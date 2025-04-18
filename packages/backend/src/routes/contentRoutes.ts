@@ -33,4 +33,25 @@ router.get(
   contentController.getContentDetail.bind(contentController)
 );
 
+// 스트리밍 정보 조회 (로그인 필수)
+router.get(
+  "/:id/stream",
+  authenticate({ required: true }),
+  contentController.getStreamingInfo.bind(contentController)
+);
+
+// 재생 위치 업데이트 (로그인 필수)
+router.post(
+  "/playback/position",
+  authenticate({ required: true }),
+  contentController.updatePlaybackPosition.bind(contentController)
+);
+
+// 최종 재생 정보 업데이트 (로그인 필수)
+router.post(
+  "/playback/final",
+  authenticate({ required: true }),
+  contentController.updateFinalPlaybackInfo.bind(contentController)
+);
+
 export default router;

@@ -6,7 +6,10 @@ import {
   ContentSearchResponseDTO,
 } from "../models/Content";
 import { Genre } from "../models/Genre";
-import { ViewingHistory } from "../models/ViewingHistory";
+import {
+  StreamingInfoResponse,
+  ViewingHistory,
+} from "../models/ViewingHistory";
 import { Wishlist } from "../models/Wishlist";
 
 export class ContentService {
@@ -255,5 +258,145 @@ export class ContentService {
     }
 
     return response;
+  }
+
+  /**
+   * 콘텐츠 스트리밍 정보를 조회합니다.
+   * 로그인한 사용자의 이전 시청 위치를 포함합니다.
+   *
+   * @param contentId 콘텐츠 ID
+   * @param userId 사용자 ID
+   * @returns 스트리밍 URL과 마지막 시청 위치
+   */
+  async getStreamingInfo(
+    contentId: number,
+    userId: number
+  ): Promise<StreamingInfoResponse> {
+    const contentRepository = getRepository(Content);
+    const viewingHistoryRepository = getRepository(ViewingHistory);
+
+    // 콘텐츠 정보 조회
+    const content = await contentRepository.findOne({
+      where: { id: contentId },
+    });
+
+    if (!content) {
+      throw new Error("존재하지 않는 콘텐츠입니다.");
+    }
+
+    // 사용자의 이전 시청 기록 조회
+    const viewingHistory = await viewingHistoryRepository.findOne({
+      where: {
+        user: { id: userId },
+        content: { id: contentId },
+      },
+      order: { watched_at: "DESC" },
+    });
+
+    // 스트리밍 정보 반환 (시청 기록이 없으면 0초부터 시작)
+    return {
+      streaming_url: content.video_url,
+      last_position: viewingHistory ? viewingHistory.last_position : 0,
+    };
+  }
+
+  /**
+   * 콘텐츠 재생 위치를 업데이트합니다.
+   *
+   * @param contentId 콘텐츠 ID
+   * @param userId 사용자 ID
+   * @param currentPosition 현재 재생 위치(초)
+   */
+  async updatePlaybackPosition(
+    contentId: number,
+    userId: number,
+    currentPosition: number
+  ): Promise<void> {
+    const contentRepository = getRepository(Content);
+    const viewingHistoryRepository = getRepository(ViewingHistory);
+
+    // 콘텐츠 확인
+    const content = await contentRepository.findOne({
+      where: { id: contentId },
+    });
+
+    if (!content) {
+      throw new Error("존재하지 않는 콘텐츠입니다.");
+    }
+
+    // 기존 시청 기록 조회
+    let viewingHistory = await viewingHistoryRepository.findOne({
+      where: {
+        user: { id: userId },
+        content: { id: contentId },
+      },
+    });
+
+    // 시청 기록이 없으면 새로 생성
+    if (!viewingHistory) {
+      viewingHistory = new ViewingHistory();
+      viewingHistory.user = { id: userId } as any;
+      viewingHistory.content = { id: contentId } as any;
+      viewingHistory.watch_duration = 0;
+      viewingHistory.is_completed = false;
+    }
+
+    // 마지막 재생 위치 업데이트
+    viewingHistory.last_position = currentPosition;
+
+    // 저장
+    await viewingHistoryRepository.save(viewingHistory);
+  }
+
+  /**
+   * 콘텐츠 재생 완료 시 최종 정보를 업데이트합니다.
+   *
+   * @param contentId 콘텐츠 ID
+   * @param userId 사용자 ID
+   * @param finalPosition 최종 재생 위치(초)
+   * @param watchDuration 시청 시간(초)
+   * @param isCompleted 시청 완료 여부
+   */
+  async updateFinalPlaybackInfo(
+    contentId: number,
+    userId: number,
+    finalPosition: number,
+    watchDuration: number,
+    isCompleted: boolean
+  ): Promise<void> {
+    const contentRepository = getRepository(Content);
+    const viewingHistoryRepository = getRepository(ViewingHistory);
+
+    // 콘텐츠 확인
+    const content = await contentRepository.findOne({
+      where: { id: contentId },
+    });
+
+    if (!content) {
+      throw new Error("존재하지 않는 콘텐츠입니다.");
+    }
+
+    // 기존 시청 기록 조회
+    let viewingHistory = await viewingHistoryRepository.findOne({
+      where: {
+        user: { id: userId },
+        content: { id: contentId },
+      },
+    });
+
+    // 시청 기록이 없으면 새로 생성
+    if (!viewingHistory) {
+      viewingHistory = new ViewingHistory();
+      viewingHistory.user = { id: userId } as any;
+      viewingHistory.content = { id: contentId } as any;
+    }
+
+    // 정보 업데이트
+    viewingHistory.last_position = finalPosition;
+    viewingHistory.watch_duration = watchDuration;
+    viewingHistory.is_completed = isCompleted;
+
+    // 저장
+    await viewingHistoryRepository.save(viewingHistory);
   }
 }

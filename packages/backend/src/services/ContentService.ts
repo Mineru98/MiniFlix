@@ -1,10 +1,12 @@
 import { getManager, getRepository, Like } from "typeorm";
 import {
   Content,
+  ContentDetailResponseDTO,
   ContentListResponseDTO,
   ContentSearchResponseDTO,
 } from "../models/Content";
 import { Genre } from "../models/Genre";
+import { ViewingHistory } from "../models/ViewingHistory";
 import { Wishlist } from "../models/Wishlist";
 
 export class ContentService {
@@ -169,5 +171,89 @@ export class ContentService {
       release_year: content.release_year,
       is_wished: wishedContentIds.has(content.id),
     }));
+  }
+
+  /**
+   * 콘텐츠 상세 정보를 조회합니다.
+   * 로그인 상태인 경우 사용자의 찜 목록 정보와 시청 기록을 포함합니다.
+   *
+   * @param contentId 콘텐츠 ID
+   * @param userId 로그인한 사용자의 ID (옵션)
+   * @returns 콘텐츠 상세 정보
+   */
+  async getContentDetail(
+    contentId: number,
+    userId?: number
+  ): Promise<ContentDetailResponseDTO> {
+    const contentRepository = getRepository(Content);
+    const entityManager = getManager();
+
+    // 콘텐츠 기본 정보 조회
+    const content = await contentRepository.findOne({
+      where: { id: contentId },
+    });
+
+    if (!content) {
+      throw new Error("존재하지 않는 콘텐츠입니다.");
+    }
+
+    // 콘텐츠의 장르 정보 조회
+    const genres = await entityManager.query(
+      `
+      SELECT g.id, g.name, g.description
+      FROM genres g
+      JOIN content_genres cg ON g.id = cg.genre_id
+      WHERE cg.content_id = ?
+    `,
+      [contentId]
+    );
+
+    // 기본 응답 객체 생성
+    const response: ContentDetailResponseDTO = {
+      id: content.id,
+      title: content.title,
+      description: content.description,
+      thumbnail_url: content.thumbnail_url,
+      video_url: content.video_url,
+      duration: content.duration,
+      release_year: content.release_year,
+      genres: genres.map((genre: any) => ({
+        id: genre.id,
+        name: genre.name,
+        description: genre.description,
+      })),
+    };
+
+    // 비로그인 상태인 경우 기본 정보만 반환
+    if (!userId) {
+      return response;
+    }
+
+    // 로그인 상태인 경우 찜 목록 정보 추가
+    const wishlistRepository = getRepository(Wishlist);
+    const wishlist = await wishlistRepository.findOne({
+      where: {
+        user: { id: userId },
+        content: { id: contentId },
+      },
+    });
+
+    response.is_wished = !!wishlist;
+
+    // 시청 기록 조회
+    const viewingHistoryRepository = getRepository(ViewingHistory);
+    const viewingHistory = await viewingHistoryRepository.findOne({
+      where: {
+        user: { id: userId },
+        content: { id: contentId },
+      },
+      order: { watched_at: "DESC" },
+    });
+
+    if (viewingHistory) {
+      response.last_position = viewingHistory.last_position;
+    }
+
+    return response;
   }
 }

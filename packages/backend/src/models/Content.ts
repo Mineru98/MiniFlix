@@ -142,3 +142,74 @@ export interface ContentSearchResponseDTO {
 export interface ContentSearchResponse {
   contents: ContentSearchResponseDTO[];
 }
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     ContentDetailResponseDTO:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: 콘텐츠 고유 식별자
+ *         title:
+ *           type: string
+ *           description: 콘텐츠 제목
+ *         description:
+ *           type: string
+ *           description: 콘텐츠 설명
+ *         thumbnail_url:
+ *           type: string
+ *           description: 썸네일 이미지 경로
+ *         video_url:
+ *           type: string
+ *           description: 비디오 파일 경로
+ *         duration:
+ *           type: integer
+ *           description: 영상 길이(초)
+ *         release_year:
+ *           type: integer
+ *           description: 출시 연도
+ *         genres:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/GenreResponseDTO'
+ *           description: 콘텐츠 장르 목록
+ *         is_wished:
+ *           type: boolean
+ *           description: 사용자가 찜한 콘텐츠인지 여부 (로그인 상태인 경우에만 포함)
+ *         last_position:
+ *           type: integer
+ *           description: 마지막 시청 위치(초) (로그인 상태인 경우에만 포함)
+ */
+export interface ContentDetailResponseDTO {
+  id: number;
+  title: string;
+  description: string;
+  thumbnail_url: string;
+  video_url: string;
+  duration: number;
+  release_year: number;
+  genres: {
+    id: number;
+    name: string;
+    description?: string;
+  }[];
+  is_wished?: boolean;
+  last_position?: number;
+}
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     ContentDetailResponse:
+ *       type: object
+ *       properties:
+ *         content:
+ *           $ref: '#/components/schemas/ContentDetailResponseDTO'
+ */
+export interface ContentDetailResponse {
+  content: ContentDetailResponseDTO;
+}

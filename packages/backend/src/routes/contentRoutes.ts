@@ -26,4 +26,11 @@ router.get(
   contentController.searchContents.bind(contentController)
 );
 
+// 콘텐츠 상세 정보 조회 (선택적 인증)
+router.get(
+  "/:id",
+  authenticate({ required: false }),
+  contentController.getContentDetail.bind(contentController)
+);
+
 export default router;

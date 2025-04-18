@@ -8,6 +8,7 @@ import pino from "pino";
 import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import { UserController } from "./controllers/UserController";
+import apiRoutes from "./routes";
 import { AppError } from "./utils/errors";
 
 // Environment variables
@@ -58,6 +59,9 @@ app.use(
 // 라우터 설정
 const userController = new UserController();
 app.use("/api/users", userController.router);
+
+// API 라우터 등록
+app.use("/api", apiRoutes);
 
 // Base route
 app.get("/", (req, res) => {

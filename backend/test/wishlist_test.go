@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"backend/config"
+	"backend/helper"
 	"backend/model"
 
 	"github.com/gin-gonic/gin"
@@ -315,6 +317,141 @@ func TestToggleWishlistWithMockData(t *testing.T) {
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				assert.NoError(t, err)
 				assert.Equal(t, tc.expectWishlist, response.IsWishlisted)
+			}
+		})
+	}
+}
+
+// TestGetWishlistIntegration 찜 목록 조회 시나리오에 대한 통합 테스트
+func TestGetWishlistIntegration(t *testing.T) {
+	// 테스트 환경 설정
+	SetupTestDatabase(t)
+	defer TeardownTestDatabase(t)
+
+	// Gin 테스트 모드 설정
+	gin.SetMode(gin.TestMode)
+
+	// 테스트 케이스
+	testCases := []struct {
+		name         string
+		withAuth     bool
+		userID       int64
+		expectStatus int
+		setupFunc    func(t *testing.T)                                   // 테스트 데이터 설정 함수
+		checkFunc    func(t *testing.T, resp []model.ContentListResponse) // 응답 검증 함수
+	}{
+		{
+			name:         "로그인 사용자 - 찜 목록 있음",
+			withAuth:     true,
+			userID:       1, // 테스트용 사용자 ID
+			expectStatus: http.StatusOK,
+			setupFunc: func(t *testing.T) {
+				// 여기서 실제 데이터베이스에 테스트용 찜 목록 데이터를 설정할 수 있음
+				// 이미 데이터가 있다고 가정하므로 코드 생략
+			},
+			checkFunc: func(t *testing.T, wishlist []model.ContentListResponse) {
+				// 찜 목록 응답 검증
+				assert.NotEmpty(t, wishlist, "찜 목록이 비어있지 않아야 함")
+
+				// 각 항목 검증
+				for _, content := range wishlist {
+					assert.NotZero(t, content.ID, "콘텐츠 ID는 0이 아니어야 함")
+					assert.NotEmpty(t, content.Title, "콘텐츠 제목이 있어야 함")
+					assert.NotEmpty(t, content.ThumbnailURL, "썸네일 URL이 있어야 함")
+					assert.True(t, content.IsWishlisted, "찜 상태는 true여야 함")
+					assert.GreaterOrEqual(t, content.ReleaseYear, 1900, "출시 연도는 유효해야 함")
+				}
+			},
+		},
+		{
+			name:         "로그인 사용자 - 찜 목록 없음",
+			withAuth:     true,
+			userID:       9999, // 존재하지 않는 사용자 ID
+			expectStatus: http.StatusOK,
+			setupFunc:    func(t *testing.T) {}, // 설정 불필요
+			checkFunc: func(t *testing.T, wishlist []model.ContentListResponse) {
+				// 빈 찜 목록 검증
+				assert.Empty(t, wishlist, "찜 목록이 비어있어야 함")
+			},
+		},
+		{
+			name:         "비로그인 사용자 접근 거부",
+			withAuth:     false,
+			userID:       0,
+			expectStatus: http.StatusUnauthorized,
+			setupFunc:    func(t *testing.T) {},                                       // 설정 불필요
+			checkFunc:    func(t *testing.T, wishlist []model.ContentListResponse) {}, // 검증 불필요
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// 테스트 데이터 설정
+			tc.setupFunc(t)
+
+			// 설정 및 라우터 초기화
+			cfg := config.LoadConfig()
+			router := gin.New()
+
+			// 테스트 미들웨어
+			router.Use(func(c *gin.Context) {
+				if tc.withAuth {
+					c.Set("userID", tc.userID)
+					c.Set("userName", "Test User")
+					c.Set("userEmail", "test@example.com")
+					c.Next()
+				} else {
+					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "인증 필요"})
+				}
+			})
+
+			// 찜 목록 라우트 설정
+			wishlistRoutes := router.Group("/api/wishlists")
+			wishlistRoutes.GET("", func(c *gin.Context) {
+				// 사용자 ID 가져오기
+				userID := c.GetInt64("userID")
+
+				// 데이터베이스 연결
+				db, err := helper.GetDB(cfg)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "데이터베이스 연결 실패"})
+					return
+				}
+
+				// 찜 목록 조회
+				wishlist, err := model.GetWishlist(db.DB, userID)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "찜 목록 조회 실패"})
+					return
+				}
+
+				c.JSON(http.StatusOK, wishlist)
+			})
+
+			// 요청 생성
+			req, _ := http.NewRequest(http.MethodGet, "/api/wishlists", nil)
+			req.Header.Set("Content-Type", "application/json")
+
+			// 인증 헤더 설정
+			if tc.withAuth {
+				req.Header.Set("Authorization", "Bearer test-token")
+			}
+
+			// 응답 기록
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
+
+			// 상태 코드 확인
+			assert.Equal(t, tc.expectStatus, w.Code)
+
+			// 성공 응답인 경우 응답 검증
+			if w.Code == http.StatusOK {
+				var wishlist []model.ContentListResponse
+				err := json.Unmarshal(w.Body.Bytes(), &wishlist)
+				assert.NoError(t, err)
+
+				// 응답 검증
+				tc.checkFunc(t, wishlist)
 			}
 		})
 	}

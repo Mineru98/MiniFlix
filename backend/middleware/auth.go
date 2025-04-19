@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/imgeunseog/miniflix/backend/config"
-	"github.com/imgeunseog/miniflix/backend/helper"
+	"backend/config"
+	"backend/helper"
 )
 
 // AuthMiddleware JWT 인증 미들웨어

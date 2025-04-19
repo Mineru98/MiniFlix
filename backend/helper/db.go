@@ -5,7 +5,7 @@ import (
 	"log"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/imgeunseog/miniflix/backend/config"
+	"backend/config"
 	"github.com/jmoiron/sqlx"
 )
 

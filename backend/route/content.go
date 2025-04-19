@@ -6,10 +6,10 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/imgeunseog/miniflix/backend/config"
-	"github.com/imgeunseog/miniflix/backend/helper"
-	"github.com/imgeunseog/miniflix/backend/middleware"
-	"github.com/imgeunseog/miniflix/backend/model"
+	"backend/config"
+	"backend/helper"
+	"backend/middleware"
+	"backend/model"
 )
 
 // SetupContentRoutes 콘텐츠 관련 라우트 설정

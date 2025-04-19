@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/imgeunseog/miniflix/backend/config"
+	"backend/config"
 )
 
 // JWTClaims JWT 클레임 구조체

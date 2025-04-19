@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/imgeunseog/miniflix/backend/config"
-	"github.com/imgeunseog/miniflix/backend/helper"
+	"backend/config"
+	"backend/helper"
 )
 
 // SetupGenreRoutes 장르 관련 라우트 설정

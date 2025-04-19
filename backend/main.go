@@ -2,18 +2,28 @@ package main
 
 import (
 	"log"
+	"os"
+	"net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
-	"github.com/imgeunseog/miniflix/backend/config"
-	_ "github.com/imgeunseog/miniflix/backend/docs"
-	"github.com/imgeunseog/miniflix/backend/middleware"
-	"github.com/imgeunseog/miniflix/backend/route"
+	"backend/config"
+	_ "backend/docs"
+	"backend/middleware"
+	"backend/route"
 	"github.com/unrolled/secure"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
+
+func setupSwagger(r *gin.Engine) {
+	r.GET("/", func(c *gin.Context) {
+		c.Redirect(http.StatusFound, "/docs/index.html")
+	})
+
+	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+}
 
 // @title           MiniFlix API
 // @version         1.0
@@ -51,6 +61,31 @@ func main() {
 	// 라우터 생성
 	r := gin.Default()
 
+	GIN_MODE := os.Getenv("GIN_MODE")
+	if GIN_MODE != "release" {
+		setupSwagger(r)
+		// CORS 설정
+		r.Use(cors.New(cors.Config{
+			AllowOrigins: []string{
+				"http://localhost:8080", "http://localhost:3000",
+				"http://127.0.0.1:8080", "http://127.0.0.1:3000",
+			},
+			AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+			AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
+			AllowCredentials: true,
+		}))
+	} else {
+		// CORS 설정
+		r.Use(cors.New(cors.Config{
+			// AllowOrigins: []string{
+			// 	"http://" + HOST_IP + "", "http://" + HOST_IP + ":8080", "http://" + HOST_IP + ":3000",
+			// },
+			AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+			AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
+			AllowCredentials: true,
+		}))
+	}
+
 	// 미들웨어 설정
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     cfg.CorsAllowOrigins,
@@ -81,9 +116,6 @@ func main() {
 		route.SetupGenreRoutes(v1, cfg)
 		route.SetupWishlistRoutes(v1, cfg)
 	}
-
-	// 스웨거 문서 경로 설정
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// 정적 파일 제공 (영상 및 이미지 파일)
 	r.Static("/media", "./assets/media")

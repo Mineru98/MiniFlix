@@ -28,6 +28,10 @@
 - JWT 인증
 - Swagger API 문서
 
+## 부가 설정
+
+- [swag 바이너리 설치](https://github.com/swaggo/swag/releases/tag/v1.16.3)
+
 ## 실행 방법
 
 ### Docker Compose 실행

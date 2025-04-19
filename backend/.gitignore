@@ -33,3 +33,5 @@ assets/media/*
 assets/thumbnails/*
 !assets/media/.gitkeep
 !assets/thumbnails/.gitkeep 
+
+swag

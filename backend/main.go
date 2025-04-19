@@ -39,8 +39,8 @@ func setupSwagger(r *gin.Engine) {
 // @contact.url http://www.miniflix.io/support
 // @contact.email support@miniflix.io
 
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @license.name MIT
+// @license.url https://github.com/Mineru98/MiniFlix/blob/main/LICENSE.txt
 
 // @host localhost:8080
 // @BasePath /api

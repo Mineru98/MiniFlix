@@ -529,3 +529,252 @@ func TestGetAllGenres(t *testing.T) {
 		}
 	}
 }
+
+// 콘텐츠 상세 정보 조회 테스트
+func TestGetContentDetail(t *testing.T) {
+	// 테스트 환경 설정
+	SetupTestDatabase(t)
+	defer TeardownTestDatabase(t)
+
+	// Gin 테스트 모드 설정
+	gin.SetMode(gin.TestMode)
+
+	// 테스트 케이스 정의
+	testCases := []struct {
+		name            string
+		contentID       string
+		isAuthenticated bool
+		expectStatus    int
+		setupAuth       func(r *http.Request)
+	}{
+		{
+			name:            "비로그인 사용자 콘텐츠 상세 조회",
+			contentID:       "1", // 테스트용 콘텐츠 ID, 실제 DB에 있는 콘텐츠여야 함
+			isAuthenticated: false,
+			expectStatus:    http.StatusOK,
+			setupAuth:       func(r *http.Request) {}, // 인증 헤더 없음
+		},
+		{
+			name:            "로그인 사용자 콘텐츠 상세 조회",
+			contentID:       "1", // 테스트용 콘텐츠 ID, 실제 DB에 있는 콘텐츠여야 함
+			isAuthenticated: true,
+			expectStatus:    http.StatusOK,
+			setupAuth: func(r *http.Request) {
+				// 테스트용 토큰 설정
+				cfg := config.LoadConfig()
+				token, _ := helper.GenerateToken(1, "user@example.com", "테스트사용자", cfg)
+				r.Header.Set("Authorization", "Bearer "+token)
+			},
+		},
+		{
+			name:            "잘못된 콘텐츠 ID로 조회",
+			contentID:       "invalid", // 유효하지 않은 콘텐츠 ID
+			isAuthenticated: false,
+			expectStatus:    http.StatusBadRequest,
+			setupAuth:       func(r *http.Request) {},
+		},
+		{
+			name:            "존재하지 않는 콘텐츠 ID로 조회",
+			contentID:       "99999", // 존재하지 않는 콘텐츠 ID
+			isAuthenticated: false,
+			expectStatus:    http.StatusNotFound,
+			setupAuth:       func(r *http.Request) {},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// 라우터 설정
+			router := gin.New()
+			cfg := config.LoadConfig()
+			apiGroup := router.Group("/api")
+			route.SetupContentRoutes(apiGroup, cfg)
+
+			// 요청 생성
+			req, _ := http.NewRequest(http.MethodGet, "/api/contents/"+tc.contentID, nil)
+			req.Header.Set("Content-Type", "application/json")
+			tc.setupAuth(req)
+
+			// 응답 기록
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
+
+			// 상태 코드 확인
+			assert.Equal(t, tc.expectStatus, w.Code)
+
+			// 유효한 응답인 경우에만 내용 확인
+			if w.Code == http.StatusOK {
+				var content model.ContentDetailResponse
+				err := json.Unmarshal(w.Body.Bytes(), &content)
+				assert.NoError(t, err)
+
+				// 필수 필드 확인
+				assert.NotZero(t, content.ID)
+				assert.NotEmpty(t, content.Title)
+				assert.NotEmpty(t, content.Description)
+				assert.NotEmpty(t, content.ThumbnailURL)
+				assert.NotEmpty(t, content.VideoURL)
+				assert.NotZero(t, content.Duration)
+				assert.NotZero(t, content.ReleaseYear)
+				assert.NotEmpty(t, content.Genres)
+
+				// 로그인한 사용자인 경우 추가 필드 확인
+				if tc.isAuthenticated {
+					// IsWishlisted 필드가 존재하는지 확인
+					assert.Contains(t, w.Body.String(), "is_wishlisted")
+					// LastPosition 필드가 존재하는지 확인
+					assert.Contains(t, w.Body.String(), "last_position")
+				}
+			}
+		})
+	}
+}
+
+// 콘텐츠 상세 정보 조회 모의 데이터 테스트
+func TestGetContentDetailWithMockData(t *testing.T) {
+	// Gin 테스트 모드 설정
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+
+	// 모의 콘텐츠 상세 핸들러 설정
+	router.GET("/api/contents/:id", func(c *gin.Context) {
+		contentID := c.Param("id")
+
+		// ID 유효성 검사
+		if contentID == "invalid" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 콘텐츠 ID"})
+			return
+		}
+
+		if contentID == "99999" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "콘텐츠를 찾을 수 없습니다"})
+			return
+		}
+
+		// 인증 상태 확인
+		isAuthenticated := false
+		lastPosition := 0
+
+		// Authorization 헤더 검사
+		authHeader := c.GetHeader("Authorization")
+		if authHeader != "" && len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+			isAuthenticated = true
+			// 로그인 사용자의 경우 시청 기록 있는 것으로 가정
+			lastPosition = 300 // 5분 위치 (300초)
+		}
+
+		// 모의 콘텐츠 상세 정보 생성
+		content := model.ContentDetailResponse{
+			ID:           1,
+			Title:        "테스트 영화",
+			Description:  "이것은 테스트 영화 설명입니다.",
+			ThumbnailURL: "/thumbnails/movie.jpg",
+			VideoURL:     "/videos/movie.mp4",
+			Duration:     7200, // 2시간 (7200초)
+			ReleaseYear:  2022,
+			Genres: []model.Genre{
+				{
+					ID:          1,
+					Name:        "액션",
+					Description: "액션 장르",
+				},
+				{
+					ID:          2,
+					Name:        "스릴러",
+					Description: "스릴러 장르",
+				},
+			},
+			IsWishlisted: isAuthenticated, // 로그인 사용자면 찜 상태 설정
+			LastPosition: lastPosition,    // 로그인 사용자만 시청 위치 있음
+		}
+
+		c.JSON(http.StatusOK, content)
+	})
+
+	// 테스트 케이스
+	testCases := []struct {
+		name               string
+		contentID          string
+		isAuthenticated    bool
+		expectStatus       int
+		expectWishlisted   bool
+		expectLastPosition int
+		setupAuth          func(r *http.Request)
+	}{
+		{
+			name:               "비로그인 사용자 콘텐츠 상세 조회",
+			contentID:          "1",
+			isAuthenticated:    false,
+			expectStatus:       http.StatusOK,
+			expectWishlisted:   false,
+			expectLastPosition: 0,
+			setupAuth:          func(r *http.Request) {}, // 인증 헤더 없음
+		},
+		{
+			name:               "로그인 사용자 콘텐츠 상세 조회",
+			contentID:          "1",
+			isAuthenticated:    true,
+			expectStatus:       http.StatusOK,
+			expectWishlisted:   true,
+			expectLastPosition: 300,
+			setupAuth: func(r *http.Request) {
+				r.Header.Set("Authorization", "Bearer test-token")
+			},
+		},
+		{
+			name:               "잘못된 콘텐츠 ID로 조회",
+			contentID:          "invalid",
+			isAuthenticated:    false,
+			expectStatus:       http.StatusBadRequest,
+			expectWishlisted:   false,
+			expectLastPosition: 0,
+			setupAuth:          func(r *http.Request) {},
+		},
+		{
+			name:               "존재하지 않는 콘텐츠 ID로 조회",
+			contentID:          "99999",
+			isAuthenticated:    false,
+			expectStatus:       http.StatusNotFound,
+			expectWishlisted:   false,
+			expectLastPosition: 0,
+			setupAuth:          func(r *http.Request) {},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// 요청 생성
+			req, _ := http.NewRequest(http.MethodGet, "/api/contents/"+tc.contentID, nil)
+			req.Header.Set("Content-Type", "application/json")
+			tc.setupAuth(req)
+
+			// 응답 기록
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
+
+			// 상태 코드 확인
+			assert.Equal(t, tc.expectStatus, w.Code)
+
+			// 유효한 응답인 경우에만 내용 확인
+			if w.Code == http.StatusOK {
+				var content model.ContentDetailResponse
+				err := json.Unmarshal(w.Body.Bytes(), &content)
+				assert.NoError(t, err)
+
+				// 필수 필드 확인
+				assert.Equal(t, int64(1), content.ID)
+				assert.Equal(t, "테스트 영화", content.Title)
+				assert.NotEmpty(t, content.Description)
+				assert.NotEmpty(t, content.ThumbnailURL)
+				assert.NotEmpty(t, content.VideoURL)
+				assert.Equal(t, 7200, content.Duration)
+				assert.Equal(t, 2022, content.ReleaseYear)
+				assert.Len(t, content.Genres, 2)
+
+				// 인증 상태에 따른 필드 확인
+				assert.Equal(t, tc.expectWishlisted, content.IsWishlisted)
+				assert.Equal(t, tc.expectLastPosition, content.LastPosition)
+			}
+		})
+	}
+}

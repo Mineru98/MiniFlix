@@ -11,20 +11,20 @@ import (
 
 // Config 애플리케이션 설정 구조체
 type Config struct {
-	Environment      string   `json:"environment"`     // 실행 환경 (development, production)
-	Host             string   `json:"host"`            // 서버 호스트
-	Port             string   `json:"port"`            // 서버 포트
-	ServerPort       string   `json:"server_port"`     // 서버 포트 (Port와 동일, 호환성 유지)
-	JWTSecret        string   `json:"jwt_secret"`      // JWT 시크릿 키
-	JWTExpireHours   int      `json:"jwt_expire_hours"` // JWT 만료 시간(시간)
-	DBHost           string   `json:"db_host"`         // 데이터베이스 호스트
-	DBPort           string   `json:"db_port"`         // 데이터베이스 포트
-	DBUser           string   `json:"db_user"`         // 데이터베이스 사용자
-	DBPassword       string   `json:"db_password"`     // 데이터베이스 비밀번호
-	DBName           string   `json:"db_name"`         // 데이터베이스 이름
+	Environment      string   `json:"environment"`        // 실행 환경 (development, production)
+	Host             string   `json:"host"`               // 서버 호스트
+	Port             string   `json:"port"`               // 서버 포트
+	ServerPort       string   `json:"server_port"`        // 서버 포트 (Port와 동일, 호환성 유지)
+	JWTSecret        string   `json:"jwt_secret"`         // JWT 시크릿 키
+	JWTExpireHours   int      `json:"jwt_expire_hours"`   // JWT 만료 시간(시간)
+	DBHost           string   `json:"db_host"`            // 데이터베이스 호스트
+	DBPort           string   `json:"db_port"`            // 데이터베이스 포트
+	DBUser           string   `json:"db_user"`            // 데이터베이스 사용자
+	DBPassword       string   `json:"db_password"`        // 데이터베이스 비밀번호
+	DBName           string   `json:"db_name"`            // 데이터베이스 이름
 	CorsAllowOrigins []string `json:"cors_allow_origins"` // CORS 허용 출처
-	MediaPath        string   `json:"media_path"`      // 미디어 파일 경로
-	ThumbnailPath    string   `json:"thumbnail_path"`  // 썸네일 이미지 경로
+	MediaPath        string   `json:"media_path"`         // 미디어 파일 경로
+	ThumbnailPath    string   `json:"thumbnail_path"`     // 썸네일 이미지 경로
 }
 
 // LoadConfig 환경에 따른 설정 파일 로드
@@ -87,7 +87,7 @@ func getDefaultConfig() Config {
 		JWTSecret:        "miniflix_secret_key",
 		JWTExpireHours:   24,
 		DBHost:           "localhost",
-		DBPort:           "3306",
+		DBPort:           "3308",
 		DBUser:           "miniflix",
 		DBPassword:       "miniflix",
 		DBName:           "miniflix",
@@ -136,4 +136,4 @@ func overrideConfigFromEnv(config *Config) {
 	if thumbnailPath := os.Getenv("THUMBNAIL_PATH"); thumbnailPath != "" {
 		config.ThumbnailPath = thumbnailPath
 	}
-} 
+}

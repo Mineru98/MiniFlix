@@ -257,6 +257,18 @@
   dependencies:
     tslib "^2.4.0"
 
+"@tanstack/query-core@5.74.4":
+  version "5.74.4"
+  resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-5.74.4.tgz#08c4f88f336738d822d9242c5e7d2be50f5c25b3"
+  integrity sha512-YuG0A0+3i9b2Gfo9fkmNnkUWh5+5cFhWBN0pJAHkHilTx6A0nv8kepkk4T4GRt4e5ahbtFj2eTtkiPcVU1xO4A==
+
+"@tanstack/react-query@^5.74.4":
+  version "5.74.4"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-query/-/react-query-5.74.4.tgz#d73ee1899c08a227519cbf53b9a0e0b1e67cd3fe"
+  integrity sha512-mAbxw60d4ffQ4qmRYfkO1xzRBPUEf/72Dgo3qqea0J66nIKuDTLEqQt0ku++SDFlMGMnB6uKDnEG1xD/TDse4Q==
+  dependencies:
+    "@tanstack/query-core" "5.74.4"
+
 "@tybys/wasm-util@^0.9.0":
   version "0.9.0"
   resolved "https://registry.yarnpkg.com/@tybys/wasm-util/-/wasm-util-0.9.0.tgz#3e75eb00604c8d6db470bf18c37b7d984a0e3355"
@@ -280,6 +292,11 @@
   version "15.7.14"
   resolved "https://registry.yarnpkg.com/@types/prop-types/-/prop-types-15.7.14.tgz#1433419d73b2a7ebfc6918dcefd2ec0d5cd698f2"
   integrity sha512-gNMvNH49DJ7OJYv+KAKn0Xp45p8PLl6zo2YnvDIbTd4J6MER2BmWN49TG7n9LvkyihINxeKW8+3bfS2yDC9dzQ==
+
+"@types/qs@^6.9.18":
+  version "6.9.18"
+  resolved "https://registry.yarnpkg.com/@types/qs/-/qs-6.9.18.tgz#877292caa91f7c1b213032b34626505b746624c2"
+  integrity sha512-kK7dgTYDyGqS+e2Q4aK9X3D7q234CIZ1Bv0q/7Z5IwRDoADNU81xXJK/YVyLbLTZCoIwUoDoffFeF+p/eIklAA==
 
 "@types/react-dom@^18.2.13":
   version "18.3.6"
@@ -1104,6 +1121,11 @@ es-to-primitive@^1.3.0:
     is-callable "^1.2.7"
     is-date-object "^1.0.5"
     is-symbol "^1.0.4"
+
+es-toolkit@^1.35.0:
+  version "1.35.0"
+  resolved "https://registry.yarnpkg.com/es-toolkit/-/es-toolkit-1.35.0.tgz#3f9715e140059405929278596a2c0bfa520e047e"
+  integrity sha512-kVHyrRoC0eLc1hWJ6npG8nNFtOG+nWfcMI+XE0RaFO0gxd6Ions8r0O/U64QyZgY7IeidUnS5oZlRZYUgMGCAg==
 
 escalade@^3.2.0:
   version "3.2.0"
@@ -2566,6 +2588,13 @@ punycode@^2.1.0:
   version "2.3.1"
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-2.3.1.tgz#027422e2faec0b25e1549c3e1bd8309b9133b6e5"
   integrity sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==
+
+qs@^6.14.0:
+  version "6.14.0"
+  resolved "https://registry.yarnpkg.com/qs/-/qs-6.14.0.tgz#c63fa40680d2c5c941412a0e899c89af60c0a930"
+  integrity sha512-YWWTjgABSKcvs/nWBi9PycY/JiPJqOD4JA6o9Sej2AtvSGarXxKC3OQSk4pAarbdQlKAh5D4FCQkJNkW+GAn3w==
+  dependencies:
+    side-channel "^1.1.0"
 
 queue-microtask@^1.2.2:
   version "1.2.3"

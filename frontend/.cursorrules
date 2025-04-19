@@ -1,0 +1,57 @@
+## 개요
+MiniFlix는 Next.js 기반의 비디오 스트리밍 서비스 프론트엔드로, 클린 아키텍처 패턴을 따릅니다.
+
+## 기술 스택
+- 프레임워크: Next.js 13.5.4
+- 상태 관리: Zustand, React Query(TanStack Query)
+- 스타일링: Tailwind CSS
+- HTTP 클라이언트: Axios
+- 인증: NextAuth
+- 폼 관리: React Hook Form
+- 미디어 재생: React Player
+
+## 아키텍처 구조
+
+### 1. Presentation 레이어 (src/presentation/)
+- **components/**: 아토믹 디자인 패턴에 따른 컴포넌트
+  - atoms/: 버튼, 입력 필드 등 기본 UI 요소
+  - molecules/: 기본 컴포넌트를 조합한 복합 컴포넌트
+  - organisms/: 분자 컴포넌트를 조합한 더 복잡한 UI 블록
+- **features/**: 기능별 UI 컴포넌트
+- **layouts/**: 페이지 레이아웃 구성요소
+- **styles/**: 스타일 관련 파일
+
+### 2. Application 레이어 (src/application/)
+- **hooks/**: 커스텀 React 훅
+- **store/**: Zustand 기반 상태 관리 로직
+
+### 3. Infrastructure 레이어 (src/infrastructure/)
+- **api/**: API 클라이언트 및 통신 로직 
+  - client.ts: Axios 기반 API 클라이언트
+  - base_dtos.ts: 데이터 전송 객체 정의
+- **helper/**: 유틸리티 함수
+- **client/**: 외부 서비스 클라이언트
+
+### 4. Types (src/types/)
+- TypeScript 타입 정의
+
+### 5. Pages (src/pages/)
+- Next.js 라우팅 시스템에 따른 페이지 정의
+
+## 주요 설계 원칙
+1. **관심사 분리**: 각 레이어는 명확한 책임을 가지며 독립적으로 작동
+2. **의존성 규칙**: 내부 레이어는 외부 레이어에 의존하지 않음
+3. **코드 재사용성**: 공통 컴포넌트 및 로직을 재사용하여 중복 최소화
+4. **테스트 용이성**: 각 레이어를 독립적으로 테스트 가능한 구조
+
+## API 통신 패턴
+- Axios 인터셉터를 사용한 토큰 관리 및 에러 처리
+- React Query를 사용한 서버 상태 관리
+- 타입 안전성이 보장된 API 클라이언트
+
+## 아키텍처 가이드라인
+- 하나의 컴포넌트 폴더 아래에는 기본적으로 다음 세가지 파일로 구성이 됩니다.
+    - `index.tsx`: 컴포넌트 내용
+    - `types.ts`: 컴포넌트 타입 정의
+    - `styles.ts`: 컴포넌트 스타일 정의
+- 상수의 경우는 `constants.ts` 파일을 만들어서 사용합니다.

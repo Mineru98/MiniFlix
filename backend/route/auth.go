@@ -1,14 +1,15 @@
 package route
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"backend/config"
 	"backend/helper"
 	"backend/model"
+	"backend/service"
+
+	"github.com/gin-gonic/gin"
 )
 
 // SetupAuthRoutes 인증 관련 라우트 설정
@@ -47,24 +48,19 @@ func handleRegister(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		// 이메일 중복 확인
-		var count int
-		err = db.QueryRow("SELECT COUNT(*) FROM Users WHERE email = ?", req.Email).Scan(&count)
-		if err != nil {
-			log.Printf("이메일 중복 확인 실패: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "이메일 중복 확인 실패"})
-			return
-		}
+		// UserService 인스턴스 생성
+		userService := service.NewUserService(db)
 
-		if count > 0 {
-			c.JSON(http.StatusConflict, gin.H{"error": "이미 등록된 이메일입니다"})
-			return
-		}
-
-		// 사용자 생성
-		user, err := model.CreateUser(db.DB, &req)
+		// 사용자 등록
+		user, err := userService.Register(&req)
 		if err != nil {
-			log.Printf("사용자 생성 실패: %v", err)
+			// 이메일 중복 오류 처리
+			if err.Error() == "이미 등록된 이메일입니다" {
+				c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+				return
+			}
+
+			log.Printf("사용자 등록 실패: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "사용자 등록 실패"})
 			return
 		}
@@ -101,27 +97,13 @@ func handleLogin(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		// 사용자 조회
-		user, err := model.GetUserByEmail(db.DB, req.Email)
+		// UserService 인스턴스 생성
+		userService := service.NewUserService(db)
+
+		// 로그인 검증
+		user, err := userService.ValidateLogin(&req)
 		if err != nil {
-			if err == sql.ErrNoRows {
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "이메일 또는 비밀번호가 올바르지 않습니다"})
-			} else {
-				log.Printf("사용자 조회 실패: %v", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "로그인 처리 실패"})
-			}
-			return
-		}
-
-		// 계정 활성화 상태 확인
-		if !user.IsActive {
-			c.JSON(http.StatusForbidden, gin.H{"error": "비활성화된 계정입니다"})
-			return
-		}
-
-		// 비밀번호 확인
-		if !model.CheckPasswordHash(req.Password, user.Password) {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "이메일 또는 비밀번호가 올바르지 않습니다"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -139,4 +121,4 @@ func handleLogin(cfg *config.Config) gin.HandlerFunc {
 			"user":  user.ToUserResponse(),
 		})
 	}
-} 
+}

@@ -11,23 +11,24 @@ import (
 
 // Config 애플리케이션 설정 구조체
 type Config struct {
-	Env              string   `json:"env"`
-	Host             string   `json:"host"`
-	Port             string   `json:"port"`
-	JWTSecret        string   `json:"jwt_secret"`
-	JWTExpireHours   int      `json:"jwt_expire_hours"`
-	DBHost           string   `json:"db_host"`
-	DBPort           string   `json:"db_port"`
-	DBUser           string   `json:"db_user"`
-	DBPassword       string   `json:"db_password"`
-	DBName           string   `json:"db_name"`
-	CorsAllowOrigins []string `json:"cors_allow_origins"`
-	MediaPath        string   `json:"media_path"`
-	ThumbnailPath    string   `json:"thumbnail_path"`
+	Environment      string   `json:"environment"`     // 실행 환경 (development, production)
+	Host             string   `json:"host"`            // 서버 호스트
+	Port             string   `json:"port"`            // 서버 포트
+	ServerPort       string   `json:"server_port"`     // 서버 포트 (Port와 동일, 호환성 유지)
+	JWTSecret        string   `json:"jwt_secret"`      // JWT 시크릿 키
+	JWTExpireHours   int      `json:"jwt_expire_hours"` // JWT 만료 시간(시간)
+	DBHost           string   `json:"db_host"`         // 데이터베이스 호스트
+	DBPort           string   `json:"db_port"`         // 데이터베이스 포트
+	DBUser           string   `json:"db_user"`         // 데이터베이스 사용자
+	DBPassword       string   `json:"db_password"`     // 데이터베이스 비밀번호
+	DBName           string   `json:"db_name"`         // 데이터베이스 이름
+	CorsAllowOrigins []string `json:"cors_allow_origins"` // CORS 허용 출처
+	MediaPath        string   `json:"media_path"`      // 미디어 파일 경로
+	ThumbnailPath    string   `json:"thumbnail_path"`  // 썸네일 이미지 경로
 }
 
 // LoadConfig 환경에 따른 설정 파일 로드
-func LoadConfig() (*Config, error) {
+func LoadConfig() *Config {
 	env := os.Getenv("APP_ENV")
 	if env == "" {
 		env = "development" // 기본값은 개발 환경
@@ -44,39 +45,69 @@ func LoadConfig() (*Config, error) {
 		// 프로젝트 루트에서 상대 경로로 시도
 		dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 		if err != nil {
-			return nil, err
+			panic(fmt.Sprintf("경로 확인 실패: %v", err))
 		}
 		configFile = filepath.Join(dir, configFile)
 	}
 
+	// 파일을 열거나 기본 설정 생성
+	var config Config
 	file, err := os.Open(configFile)
 	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var config Config
-	decoder := json.NewDecoder(file)
-	if err := decoder.Decode(&config); err != nil {
-		return nil, err
+		fmt.Printf("경고: 설정 파일을 열 수 없습니다: %v, 기본 설정을 사용합니다\n", err)
+		config = getDefaultConfig()
+	} else {
+		defer file.Close()
+		decoder := json.NewDecoder(file)
+		if err := decoder.Decode(&config); err != nil {
+			fmt.Printf("경고: 설정 파일 디코딩 실패: %v, 기본 설정을 사용합니다\n", err)
+			config = getDefaultConfig()
+		}
 	}
 
 	// 환경 변수로 설정 덮어쓰기
 	overrideConfigFromEnv(&config)
 
 	// 환경 설정
-	config.Env = env
+	config.Environment = env
 
-	return &config, nil
+	// ServerPort 설정 (Port와 동일하게 유지)
+	config.ServerPort = config.Port
+
+	return &config
+}
+
+// getDefaultConfig 기본 설정값 반환
+func getDefaultConfig() Config {
+	return Config{
+		Environment:      "development",
+		Host:             "localhost",
+		Port:             "8080",
+		ServerPort:       "8080",
+		JWTSecret:        "miniflix_secret_key",
+		JWTExpireHours:   24,
+		DBHost:           "localhost",
+		DBPort:           "3306",
+		DBUser:           "miniflix",
+		DBPassword:       "miniflix",
+		DBName:           "miniflix",
+		CorsAllowOrigins: []string{"*"},
+		MediaPath:        "./assets/media",
+		ThumbnailPath:    "./assets/thumbnails",
+	}
 }
 
 // 환경 변수에서 설정 값 덮어쓰기
 func overrideConfigFromEnv(config *Config) {
+	if env := os.Getenv("APP_ENV"); env != "" {
+		config.Environment = env
+	}
 	if host := os.Getenv("HOST"); host != "" {
 		config.Host = host
 	}
 	if port := os.Getenv("PORT"); port != "" {
 		config.Port = port
+		config.ServerPort = port
 	}
 	if jwtSecret := os.Getenv("JWT_SECRET"); jwtSecret != "" {
 		config.JWTSecret = jwtSecret

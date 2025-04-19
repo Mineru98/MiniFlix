@@ -34,6 +34,17 @@ func SetupContentRoutes(router *gin.RouterGroup, cfg *config.Config) {
 	}
 }
 
+// SetupContentRoutesWithMockService 테스트를 위한 콘텐츠 라우트 설정 (모의 서비스 사용)
+func SetupContentRoutesWithMockService(router *gin.RouterGroup, cfg *config.Config, mockContentService interface{}) {
+	contentRoutes := router.Group("/contents")
+	{
+		// 스트리밍 관련 라우트 (모의 서비스 사용)
+		contentRoutes.GET("/:id/stream", middleware.AuthMiddleware(cfg), handleStreamContentWithMock(cfg, mockContentService))
+		contentRoutes.POST("/:id/playback", middleware.AuthMiddleware(cfg), handleUpdatePlaybackPositionWithMock(cfg, mockContentService))
+		contentRoutes.POST("/:id/final-position", middleware.AuthMiddleware(cfg), handleSaveFinalPositionWithMock(cfg, mockContentService))
+	}
+}
+
 // @Summary 콘텐츠 목록 조회
 // @Description 모든 콘텐츠 목록 조회 (인증 선택)
 // @Tags 콘텐츠
@@ -593,5 +604,128 @@ func handleUpdateViewingHistory(cfg *config.Config) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "시청 기록이 업데이트되었습니다"})
+	}
+}
+
+// 모의 서비스를 사용하는 스트리밍 핸들러
+func handleStreamContentWithMock(cfg *config.Config, mockService interface{}) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 콘텐츠 ID 파싱
+		contentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 콘텐츠 ID"})
+			return
+		}
+
+		// 사용자 ID 가져오기
+		userID := c.GetInt64("userID")
+
+		// 모의 서비스 메서드 호출
+		contentService, ok := mockService.(interface {
+			GetStreamingURL(contentID int64, userID int64) (*model.StreamingResponse, error)
+		})
+		if !ok {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "모의 서비스 유형 오류"})
+			return
+		}
+
+		// 스트리밍 URL 조회
+		response, err := contentService.GetStreamingURL(contentID, userID)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "콘텐츠를 찾을 수 없습니다"})
+			return
+		}
+
+		c.JSON(http.StatusOK, response)
+	}
+}
+
+// 모의 서비스를 사용하는 재생 위치 업데이트 핸들러
+func handleUpdatePlaybackPositionWithMock(cfg *config.Config, mockService interface{}) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 콘텐츠 ID 파싱
+		contentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 콘텐츠 ID"})
+			return
+		}
+
+		// 요청 데이터 파싱
+		var req model.PlaybackPositionRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 요청 데이터", "details": err.Error()})
+			return
+		}
+
+		// 요청 데이터와 URL 경로의 콘텐츠 ID 일치 확인
+		if req.ContentID != contentID {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "요청 데이터와 URL 경로의 콘텐츠 ID가 일치하지 않습니다"})
+			return
+		}
+
+		// 사용자 ID 가져오기
+		userID := c.GetInt64("userID")
+
+		// 모의 서비스 메서드 호출
+		contentService, ok := mockService.(interface {
+			UpdatePlaybackPosition(req *model.PlaybackPositionRequest, userID int64) error
+		})
+		if !ok {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "모의 서비스 유형 오류"})
+			return
+		}
+
+		// 재생 위치 업데이트
+		if err := contentService.UpdatePlaybackPosition(&req, userID); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "재생 위치 업데이트 실패"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "재생 위치가 업데이트되었습니다"})
+	}
+}
+
+// 모의 서비스를 사용하는 최종 재생 위치 저장 핸들러
+func handleSaveFinalPositionWithMock(cfg *config.Config, mockService interface{}) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 콘텐츠 ID 파싱
+		contentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 콘텐츠 ID"})
+			return
+		}
+
+		// 요청 데이터 파싱
+		var req model.FinalPositionRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 요청 데이터", "details": err.Error()})
+			return
+		}
+
+		// 요청 데이터와 URL 경로의 콘텐츠 ID 일치 확인
+		if req.ContentID != contentID {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "요청 데이터와 URL 경로의 콘텐츠 ID가 일치하지 않습니다"})
+			return
+		}
+
+		// 사용자 ID 가져오기
+		userID := c.GetInt64("userID")
+
+		// 모의 서비스 메서드 호출
+		contentService, ok := mockService.(interface {
+			SaveFinalPosition(req *model.FinalPositionRequest, userID int64) error
+		})
+		if !ok {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "모의 서비스 유형 오류"})
+			return
+		}
+
+		// 최종 재생 위치 저장
+		if err := contentService.SaveFinalPosition(&req, userID); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "최종 재생 위치 저장 실패"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "최종 재생 위치가 저장되었습니다"})
 	}
 }

@@ -70,6 +70,8 @@ func (e *mockError) Error() string {
 func SetupTestDatabase(t *testing.T) {
 	// 테스트 환경 변수 설정
 	os.Setenv("APP_ENV", "test")
+	// 모의 데이터베이스 사용 설정
+	os.Setenv("MOCK_DB", "true")
 
 	// 테스트에 필요한 설정 값을 환경 변수로 직접 설정
 	os.Setenv("DB_HOST", "localhost")

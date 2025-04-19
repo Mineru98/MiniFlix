@@ -73,6 +73,12 @@ func main() {
 		// 인증 라우트
 		route.SetupAuthRoutes(apiGroup, cfg)
 
+		// 콘텐츠 라우트 (인증 필요/불필요 라우트 모두 포함)
+		route.SetupContentRoutes(apiGroup, cfg)
+
+		// 장르 라우트 (공개 접근)
+		route.SetupGenreRoutes(apiGroup, cfg)
+
 		// 인증이 필요한 라우트
 		authenticatedGroup := apiGroup.Group("")
 		authenticatedGroup.Use(middleware.AuthMiddleware(cfg))
@@ -80,14 +86,8 @@ func main() {
 			// 사용자 라우트
 			route.SetupUserRoutes(authenticatedGroup, cfg)
 
-			// 콘텐츠 라우트
-			route.SetupContentRoutes(authenticatedGroup, cfg)
-
 			// 찜 목록 라우트
 			route.SetupWishlistRoutes(authenticatedGroup, cfg)
-
-			// 장르 라우트
-			route.SetupGenreRoutes(authenticatedGroup, cfg)
 		}
 
 		// Swagger API 문서 설정

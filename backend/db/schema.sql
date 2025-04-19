@@ -67,7 +67,8 @@ CREATE TABLE IF NOT EXISTS ViewingHistories (
     watched_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_completed BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
-    FOREIGN KEY (content_id) REFERENCES Contents(id) ON DELETE CASCADE
+    FOREIGN KEY (content_id) REFERENCES Contents(id) ON DELETE CASCADE,
+    UNIQUE KEY (user_id, content_id)
 ) ENGINE=InnoDB;
 
 -- 인덱스 추가

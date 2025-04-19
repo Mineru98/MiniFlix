@@ -7,21 +7,48 @@ import (
 
 // ViewingHistory 시청 기록 모델
 type ViewingHistory struct {
-	ID           int64     `db:"id" json:"id"`
-	UserID       int64     `db:"user_id" json:"user_id"`
-	ContentID    int64     `db:"content_id" json:"content_id"`
+	ID            int64     `db:"id" json:"id"`
+	UserID        int64     `db:"user_id" json:"user_id"`
+	ContentID     int64     `db:"content_id" json:"content_id"`
 	WatchDuration int       `db:"watch_duration" json:"watch_duration"`
-	LastPosition int       `db:"last_position" json:"last_position"`
-	WatchedAt    time.Time `db:"watched_at" json:"watched_at"`
-	IsCompleted  bool      `db:"is_completed" json:"is_completed"`
+	LastPosition  int       `db:"last_position" json:"last_position"`
+	WatchedAt     time.Time `db:"watched_at" json:"watched_at"`
+	IsCompleted   bool      `db:"is_completed" json:"is_completed"`
 }
 
 // ViewingHistoryRequest 시청 기록 요청 모델
 type ViewingHistoryRequest struct {
-	ContentID    int64 `json:"content_id" binding:"required"`
-	LastPosition int   `json:"last_position" binding:"required"`
+	ContentID     int64 `json:"content_id" binding:"required"`
+	LastPosition  int   `json:"last_position" binding:"required"`
 	WatchDuration int   `json:"watch_duration" binding:"required"`
-	IsCompleted  bool  `json:"is_completed"`
+	IsCompleted   bool  `json:"is_completed"`
+}
+
+// StreamingResponse 스트리밍 응답 모델
+// @Description 콘텐츠 스트리밍 요청에 대한 응답 모델
+type StreamingResponse struct {
+	ContentID    int64  `json:"content_id" example:"1"`                             // 콘텐츠 ID
+	StreamingURL string `json:"streaming_url" example:"/assets/videos/sample1.mp4"` // 스트리밍 URL
+	Duration     int    `json:"duration" example:"3600"`                            // 총 재생 시간(초)
+	LastPosition int    `json:"last_position" example:"120"`                        // 마지막 시청 위치(초)
+}
+
+// PlaybackPositionRequest 재생 위치 업데이트 요청 모델
+// @Description 재생 위치 업데이트 요청 모델
+type PlaybackPositionRequest struct {
+	ContentID       int64 `json:"content_id" binding:"required" example:"1"`         // 콘텐츠 ID
+	CurrentPosition int   `json:"current_position" binding:"required" example:"180"` // 현재 재생 위치(초)
+	WatchDuration   int   `json:"watch_duration" binding:"required" example:"180"`   // 누적 시청 시간(초)
+	IsCompleted     bool  `json:"is_completed" example:"false"`                      // 시청 완료 여부
+}
+
+// FinalPositionRequest 최종 재생 위치 저장 요청 모델
+// @Description 최종 재생 위치 저장 요청 모델
+type FinalPositionRequest struct {
+	ContentID     int64 `json:"content_id" binding:"required" example:"1"`        // 콘텐츠 ID
+	FinalPosition int   `json:"final_position" binding:"required" example:"3540"` // 최종 재생 위치(초)
+	WatchDuration int   `json:"watch_duration" binding:"required" example:"3540"` // 총 시청 시간(초)
+	IsCompleted   bool  `json:"is_completed" example:"true"`                      // 시청 완료 여부
 }
 
 // UpdateViewingHistory 시청 기록 업데이트
@@ -84,12 +111,12 @@ func GetViewingHistory(db *sql.DB, userID int64) ([]ViewingHistoryResponse, erro
 	for rows.Next() {
 		var history ViewingHistoryResponse
 		if err := rows.Scan(
-			&history.ID, &history.ContentID, &history.WatchDuration, &history.LastPosition, 
+			&history.ID, &history.ContentID, &history.WatchDuration, &history.LastPosition,
 			&history.WatchedAt, &history.IsCompleted, &history.Title, &history.ThumbnailURL, &history.Duration,
 		); err != nil {
 			return nil, err
 		}
-		
+
 		// 시청 진행률 계산 (퍼센트)
 		if history.Duration > 0 {
 			history.ProgressPercent = int(float64(history.WatchDuration) / float64(history.Duration) * 100)
@@ -97,7 +124,7 @@ func GetViewingHistory(db *sql.DB, userID int64) ([]ViewingHistoryResponse, erro
 				history.ProgressPercent = 100
 			}
 		}
-		
+
 		historyList = append(historyList, history)
 	}
 
@@ -106,14 +133,14 @@ func GetViewingHistory(db *sql.DB, userID int64) ([]ViewingHistoryResponse, erro
 
 // ViewingHistoryResponse 시청 기록 응답 모델
 type ViewingHistoryResponse struct {
-	ID             int64     `json:"id"`
-	ContentID      int64     `json:"content_id"`
-	WatchDuration  int       `json:"watch_duration"`
-	LastPosition   int       `json:"last_position"`
-	WatchedAt      time.Time `json:"watched_at"`
-	IsCompleted    bool      `json:"is_completed"`
-	Title          string    `json:"title"`
-	ThumbnailURL   string    `json:"thumbnail_url"`
-	Duration       int       `json:"duration"`
-	ProgressPercent int      `json:"progress_percent"`
-} 
+	ID              int64     `json:"id"`
+	ContentID       int64     `json:"content_id"`
+	WatchDuration   int       `json:"watch_duration"`
+	LastPosition    int       `json:"last_position"`
+	WatchedAt       time.Time `json:"watched_at"`
+	IsCompleted     bool      `json:"is_completed"`
+	Title           string    `json:"title"`
+	ThumbnailURL    string    `json:"thumbnail_url"`
+	Duration        int       `json:"duration"`
+	ProgressPercent int       `json:"progress_percent"`
+}

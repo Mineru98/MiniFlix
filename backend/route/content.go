@@ -9,6 +9,7 @@ import (
 	"backend/helper"
 	"backend/middleware"
 	"backend/model"
+	"backend/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,6 +26,11 @@ func SetupContentRoutes(router *gin.RouterGroup, cfg *config.Config) {
 
 		// 인증이 필요한 라우트
 		contentRoutes.POST("/:id/history", middleware.AuthMiddleware(cfg), handleUpdateViewingHistory(cfg))
+
+		// 스트리밍 관련 라우트
+		contentRoutes.GET("/:id/stream", middleware.AuthMiddleware(cfg), handleStreamContent(cfg))
+		contentRoutes.POST("/:id/playback", middleware.AuthMiddleware(cfg), handleUpdatePlaybackPosition(cfg))
+		contentRoutes.POST("/:id/final-position", middleware.AuthMiddleware(cfg), handleSaveFinalPosition(cfg))
 	}
 }
 
@@ -366,16 +372,183 @@ func handleGetContentsByGenre(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
-// @Summary 시청 기록 업데이트
-// @Description 콘텐츠 시청 기록 저장 (인증 필요)
+// @Summary 콘텐츠 스트리밍 요청
+// @Description 콘텐츠 스트리밍을 위한 정보 조회 (인증 필요)
 // @Tags 콘텐츠
 // @Accept json
 // @Produce json
 // @Param id path int true "콘텐츠 ID"
-// @Param history body model.ViewingHistoryRequest true "시청 기록 정보"
 // @Param Authorization header string true "Bearer JWT 토큰"
-// @Success 200 {object} map[string]interface{} "성공 메시지"
-// @Failure 400 {object} map[string]interface{} "요청 데이터 오류"
+// @Success 200 {object} model.StreamingResponse "스트리밍 정보"
+// @Failure 401 {object} map[string]interface{} "인증 실패"
+// @Failure 404 {object} map[string]interface{} "콘텐츠 없음"
+// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Router /contents/{id}/stream [get]
+func handleStreamContent(cfg *config.Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 콘텐츠 ID 파싱
+		contentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 콘텐츠 ID"})
+			return
+		}
+
+		// 데이터베이스 연결
+		db, err := helper.GetDB(cfg)
+		if err != nil {
+			log.Printf("데이터베이스 연결 실패: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "데이터베이스 연결 실패"})
+			return
+		}
+
+		// 사용자 ID 가져오기
+		userID := c.GetInt64("userID")
+
+		// 콘텐츠 서비스 생성
+		contentService := service.NewContentService(db.DB)
+
+		// 스트리밍 URL 조회
+		response, err := contentService.GetStreamingURL(contentID, userID)
+		if err != nil {
+			log.Printf("스트리밍 URL 조회 실패: %v", err)
+			c.JSON(http.StatusNotFound, gin.H{"error": "콘텐츠를 찾을 수 없습니다"})
+			return
+		}
+
+		c.JSON(http.StatusOK, response)
+	}
+}
+
+// @Summary 재생 위치 업데이트
+// @Description 콘텐츠 재생 중 주기적으로 위치 업데이트 (인증 필요)
+// @Tags 콘텐츠
+// @Accept json
+// @Produce json
+// @Param id path int true "콘텐츠 ID"
+// @Param Authorization header string true "Bearer JWT 토큰"
+// @Param request body model.PlaybackPositionRequest true "재생 위치 정보"
+// @Success 200 {object} map[string]interface{} "업데이트 성공"
+// @Failure 400 {object} map[string]interface{} "유효하지 않은 요청"
+// @Failure 401 {object} map[string]interface{} "인증 실패"
+// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Router /contents/{id}/playback [post]
+func handleUpdatePlaybackPosition(cfg *config.Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 콘텐츠 ID 파싱
+		contentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 콘텐츠 ID"})
+			return
+		}
+
+		// 요청 데이터 파싱
+		var req model.PlaybackPositionRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 요청 데이터", "details": err.Error()})
+			return
+		}
+
+		// 요청 데이터와 URL 경로의 콘텐츠 ID 일치 확인
+		if req.ContentID != contentID {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "요청 데이터와 URL 경로의 콘텐츠 ID가 일치하지 않습니다"})
+			return
+		}
+
+		// 데이터베이스 연결
+		db, err := helper.GetDB(cfg)
+		if err != nil {
+			log.Printf("데이터베이스 연결 실패: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "데이터베이스 연결 실패"})
+			return
+		}
+
+		// 사용자 ID 가져오기
+		userID := c.GetInt64("userID")
+
+		// 콘텐츠 서비스 생성
+		contentService := service.NewContentService(db.DB)
+
+		// 재생 위치 업데이트
+		if err := contentService.UpdatePlaybackPosition(userID, &req); err != nil {
+			log.Printf("재생 위치 업데이트 실패: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "재생 위치 업데이트 실패"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "재생 위치가 업데이트되었습니다"})
+	}
+}
+
+// @Summary 최종 재생 위치 저장
+// @Description 콘텐츠 시청 종료 시 최종 위치 저장 (인증 필요)
+// @Tags 콘텐츠
+// @Accept json
+// @Produce json
+// @Param id path int true "콘텐츠 ID"
+// @Param Authorization header string true "Bearer JWT 토큰"
+// @Param request body model.FinalPositionRequest true "최종 재생 위치 정보"
+// @Success 200 {object} map[string]interface{} "저장 성공"
+// @Failure 400 {object} map[string]interface{} "유효하지 않은 요청"
+// @Failure 401 {object} map[string]interface{} "인증 실패"
+// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Router /contents/{id}/final-position [post]
+func handleSaveFinalPosition(cfg *config.Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 콘텐츠 ID 파싱
+		contentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 콘텐츠 ID"})
+			return
+		}
+
+		// 요청 데이터 파싱
+		var req model.FinalPositionRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 요청 데이터", "details": err.Error()})
+			return
+		}
+
+		// 요청 데이터와 URL 경로의 콘텐츠 ID 일치 확인
+		if req.ContentID != contentID {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "요청 데이터와 URL 경로의 콘텐츠 ID가 일치하지 않습니다"})
+			return
+		}
+
+		// 데이터베이스 연결
+		db, err := helper.GetDB(cfg)
+		if err != nil {
+			log.Printf("데이터베이스 연결 실패: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "데이터베이스 연결 실패"})
+			return
+		}
+
+		// 사용자 ID 가져오기
+		userID := c.GetInt64("userID")
+
+		// 콘텐츠 서비스 생성
+		contentService := service.NewContentService(db.DB)
+
+		// 최종 재생 위치 저장
+		if err := contentService.SaveFinalPosition(userID, &req); err != nil {
+			log.Printf("최종 재생 위치 저장 실패: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "최종 재생 위치 저장 실패"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "최종 재생 위치가 저장되었습니다"})
+	}
+}
+
+// @Summary 시청 기록 업데이트
+// @Description 시청 기록 업데이트 (인증 필요)
+// @Tags 콘텐츠
+// @Accept json
+// @Produce json
+// @Param id path int true "콘텐츠 ID"
+// @Param Authorization header string true "Bearer JWT 토큰"
+// @Param request body model.ViewingHistoryRequest true "시청 기록 정보"
+// @Success 200 {object} map[string]interface{} "업데이트 성공"
+// @Failure 400 {object} map[string]interface{} "유효하지 않은 요청"
 // @Failure 401 {object} map[string]interface{} "인증 실패"
 // @Failure 500 {object} map[string]interface{} "서버 오류"
 // @Router /contents/{id}/history [post]

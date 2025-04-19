@@ -5,7 +5,66 @@ import (
 	"testing"
 
 	"backend/config"
+	"backend/model"
+
+	"github.com/stretchr/testify/mock"
 )
+
+// MockUserService는 UserService를 모킹하기 위한 구조체
+type MockUserService struct {
+	mock.Mock
+}
+
+func (m *MockUserService) Register(req *model.UserRegisterRequest) (*model.User, error) {
+	args := m.Called(req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.User), args.Error(1)
+}
+
+func (m *MockUserService) CheckEmailExists(email string) (bool, error) {
+	args := m.Called(email)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *MockUserService) ValidateLogin(req *model.UserLoginRequest) (*model.User, error) {
+	args := m.Called(req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.User), args.Error(1)
+}
+
+func (m *MockUserService) GetUserByEmail(email string) (*model.User, error) {
+	args := m.Called(email)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.User), args.Error(1)
+}
+
+func (m *MockUserService) GetUserByID(id int64) (*model.User, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.User), args.Error(1)
+}
+
+func (m *MockUserService) UpdateUserInfo(id int64, req *model.UserUpdateRequest) error {
+	args := m.Called(id, req)
+	return args.Error(0)
+}
+
+// 테스트용 에러 구현체
+type mockError struct {
+	message string
+}
+
+func (e *mockError) Error() string {
+	return e.message
+}
 
 // SetupTestDatabase 테스트용 데이터베이스 설정
 func SetupTestDatabase(t *testing.T) {

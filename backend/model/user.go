@@ -10,13 +10,13 @@ import (
 // User 사용자 모델
 // @Description 사용자 정보를 저장하는 모델
 type User struct {
-	ID        int64        `db:"id" json:"id"`                                  // 사용자 고유 ID
-	Email     string       `db:"email" json:"email" binding:"required,email"`    // 사용자 이메일(로그인 ID)
-	Password  string       `db:"password_hash" json:"-" binding:"required,min=6"` // 암호화된 비밀번호
-	Name      string       `db:"name" json:"name" binding:"required"`           // 사용자 이름
-	CreatedAt time.Time    `db:"created_at" json:"created_at"`                   // 가입일시
-	UpdatedAt time.Time    `db:"updated_at" json:"updated_at"`                   // 정보 수정일시
-	IsActive  bool         `db:"is_active" json:"is_active"`                    // 계정 활성화 상태
+	ID        int64     `db:"id" json:"id"`                                    // 사용자 고유 ID
+	Email     string    `db:"email" json:"email" binding:"required,email"`     // 사용자 이메일(로그인 ID)
+	Password  string    `db:"password_hash" json:"-" binding:"required,min=6"` // 암호화된 비밀번호
+	Name      string    `db:"name" json:"name" binding:"required"`             // 사용자 이름
+	CreatedAt time.Time `db:"created_at" json:"created_at"`                    // 가입일시
+	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`                    // 정보 수정일시
+	IsActive  bool      `db:"is_active" json:"is_active"`                      // 계정 활성화 상태
 }
 
 // UserResponse 사용자 응답 모델 (비밀번호 제외)
@@ -32,8 +32,8 @@ type UserResponse struct {
 // UserLoginRequest 로그인 요청 모델
 // @Description 로그인 시 클라이언트에서 전송하는 데이터 모델
 type UserLoginRequest struct {
-	Email    string `json:"email" binding:"required,email"`    // 사용자 이메일
-	Password string `json:"password" binding:"required"`       // 사용자 비밀번호
+	Email    string `json:"email" binding:"required,email"` // 사용자 이메일
+	Password string `json:"password" binding:"required"`    // 사용자 비밀번호
 }
 
 // UserRegisterRequest 회원가입 요청 모델
@@ -41,15 +41,15 @@ type UserLoginRequest struct {
 type UserRegisterRequest struct {
 	Email    string `json:"email" binding:"required,email"`    // 사용자 이메일
 	Password string `json:"password" binding:"required,min=6"` // 사용자 비밀번호 (최소 6자)
-	Name     string `json:"name" binding:"required"`          // 사용자 이름
+	Name     string `json:"name" binding:"required"`           // 사용자 이름
 }
 
 // UserUpdateRequest 사용자 정보 업데이트 요청 모델
 // @Description 사용자 정보 업데이트 시 클라이언트에서 전송하는 데이터 모델
 type UserUpdateRequest struct {
-	Name            string `json:"name"`                       // 변경할 사용자 이름
+	Name            string `json:"name"`                                // 변경할 사용자 이름
 	CurrentPassword string `json:"current_password" binding:"required"` // 현재 비밀번호
-	NewPassword     string `json:"new_password"`               // 새 비밀번호
+	NewPassword     string `json:"new_password"`                        // 새 비밀번호 (변경하지 않을 경우 빈 문자열)
 }
 
 // ToUserResponse User 모델을 UserResponse로 변환
@@ -169,4 +169,4 @@ func UpdateUser(db *sql.DB, id int64, update *UserUpdateRequest) error {
 		update.Name, now, id,
 	)
 	return err
-} 
+}

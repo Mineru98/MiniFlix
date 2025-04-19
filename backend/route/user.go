@@ -5,11 +5,13 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"backend/config"
 	"backend/helper"
 	"backend/middleware"
 	"backend/model"
+	"backend/service"
+
+	"github.com/gin-gonic/gin"
 )
 
 // SetupUserRoutes 사용자 관련 라우트 설정
@@ -94,33 +96,23 @@ func handleUpdateUserProfile(cfg *config.Config) gin.HandlerFunc {
 		// 사용자 ID 가져오기
 		userID := c.GetInt64("userID")
 
-		// 현재 사용자 정보 조회
-		user, err := model.GetUserByID(db.DB, userID)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				c.JSON(http.StatusNotFound, gin.H{"error": "사용자를 찾을 수 없습니다"})
-			} else {
-				log.Printf("사용자 정보 조회 실패: %v", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "사용자 정보 조회 실패"})
-			}
-			return
-		}
-
-		// 현재 비밀번호 확인
-		if !model.CheckPasswordHash(req.CurrentPassword, user.Password) {
-			c.JSON(http.StatusForbidden, gin.H{"error": "현재 비밀번호가 일치하지 않습니다"})
-			return
-		}
+		// UserService 인스턴스 생성
+		userService := service.NewUserService(db)
 
 		// 사용자 정보 업데이트
-		if err := model.UpdateUser(db.DB, userID, &req); err != nil {
+		if err := userService.UpdateUserInfo(userID, &req); err != nil {
+			if err.Error() == "현재 비밀번호가 일치하지 않습니다" {
+				c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+				return
+			}
+
 			log.Printf("사용자 정보 업데이트 실패: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "사용자 정보 업데이트 실패"})
 			return
 		}
 
 		// 업데이트된 사용자 정보 조회
-		updatedUser, err := model.GetUserByID(db.DB, userID)
+		updatedUser, err := userService.GetUserByID(userID)
 		if err != nil {
 			log.Printf("업데이트된 사용자 정보 조회 실패: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "업데이트된 사용자 정보 조회 실패"})
@@ -164,4 +156,4 @@ func handleGetViewingHistory(cfg *config.Config) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, historyList)
 	}
-} 
+}

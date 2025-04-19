@@ -1,0 +1,14 @@
+{
+  "host": "0.0.0.0",
+  "port": "8080",
+  "jwt_secret": "miniflix-secret-key",
+  "jwt_expire_hours": 24,
+  "db_host": "mysql",
+  "db_port": "3306",
+  "db_user": "miniflix",
+  "db_password": "miniflix",
+  "db_name": "miniflix",
+  "cors_allow_origins": ["http://localhost:3000"],
+  "media_path": "./assets/media",
+  "thumbnail_path": "./assets/thumbnails"
+} 

@@ -1,0 +1,31 @@
+# 일반적인 제외 파일
+.git
+.github
+.gitignore
+*.md
+!README.md
+.DS_Store
+*.swp
+*.swo
+*.log
+
+# 백엔드 제외 파일
+backend/.env
+backend/tmp
+backend/dist
+backend/vendor
+backend/.air.toml
+backend/assets/media/*
+backend/assets/thumbnails/*
+
+# 프론트엔드 제외 파일
+frontend/node_modules
+frontend/.next
+frontend/out
+frontend/dist
+frontend/.env
+frontend/.env.*
+frontend/coverage
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log* 

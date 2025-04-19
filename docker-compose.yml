@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # MySQL 데이터베이스 서비스
+  mysql:
+    image: mysql:8.0.35
+    container_name: miniflix-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: miniflix
+      MYSQL_USER: miniflix
+      MYSQL_PASSWORD: miniflix
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./backend/db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "miniflix", "-pminiflix"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - miniflix-network
+
+  # 백엔드 서비스 (Go)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: miniflix-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      - APP_ENV=production
+      - HOST=0.0.0.0
+      - PORT=8080
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=miniflix
+      - DB_PASSWORD=miniflix
+      - DB_NAME=miniflix
+      - JWT_SECRET=miniflix-secret-key
+      - JWT_EXPIRE_HOURS=24
+      - CORS_ALLOW_ORIGINS=http://localhost:3000
+    volumes:
+      - ./backend/assets:/root/assets
+    networks:
+      - miniflix-network
+
+  # 프론트엔드 서비스 (Next.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: miniflix-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - miniflix-network
+
+volumes:
+  mysql_data:
+
+networks:
+  miniflix-network:
+    driver: bridge 

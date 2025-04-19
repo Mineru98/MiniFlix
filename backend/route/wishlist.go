@@ -5,11 +5,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"backend/config"
 	"backend/helper"
 	"backend/middleware"
 	"backend/model"
+
+	"github.com/gin-gonic/gin"
 )
 
 // SetupWishlistRoutes 찜 목록 관련 라우트 설정
@@ -64,7 +65,7 @@ func handleGetWishlist(cfg *config.Config) gin.HandlerFunc {
 // @Produce json
 // @Param contentId path int true "콘텐츠 ID"
 // @Param Authorization header string true "Bearer JWT 토큰"
-// @Success 200 {object} map[string]interface{} "찜 상태"
+// @Success 200 {object} model.WishlistToggleResponse "찜 상태"
 // @Failure 400 {object} map[string]interface{} "요청 데이터 오류"
 // @Failure 401 {object} map[string]interface{} "인증 실패"
 // @Failure 500 {object} map[string]interface{} "서버 오류"
@@ -97,10 +98,16 @@ func handleToggleWishlist(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		if isWishlisted {
-			c.JSON(http.StatusOK, gin.H{"message": "콘텐츠가 찜 목록에 추가되었습니다", "is_wishlisted": true})
-		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "콘텐츠가 찜 목록에서 제거되었습니다", "is_wishlisted": false})
+		response := model.WishlistToggleResponse{
+			IsWishlisted: isWishlisted,
 		}
+
+		if isWishlisted {
+			response.Message = "콘텐츠가 찜 목록에 추가되었습니다"
+		} else {
+			response.Message = "콘텐츠가 찜 목록에서 제거되었습니다"
+		}
+
+		c.JSON(http.StatusOK, response)
 	}
-} 
+}

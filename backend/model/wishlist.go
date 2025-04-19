@@ -6,11 +6,19 @@ import (
 )
 
 // Wishlist 찜 목록 모델
+// @Description 찜 목록 데이터 모델
 type Wishlist struct {
 	ID        int64     `db:"id" json:"id"`
 	UserID    int64     `db:"user_id" json:"user_id"`
 	ContentID int64     `db:"content_id" json:"content_id"`
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
+}
+
+// WishlistToggleResponse 찜하기/취소 응답 모델
+// @Description 찜하기/취소 요청에 대한 응답 모델
+type WishlistToggleResponse struct {
+	Message      string `json:"message" example:"콘텐츠가 찜 목록에 추가되었습니다"`
+	IsWishlisted bool   `json:"is_wishlisted" example:"true"`
 }
 
 // ToggleWishlist 찜하기/취소하기
@@ -105,4 +113,4 @@ func GetWishlist(db *sql.DB, userID int64) ([]ContentListResponse, error) {
 	}
 
 	return wishlist, nil
-} 
+}

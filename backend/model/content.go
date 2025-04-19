@@ -6,6 +6,7 @@ import (
 )
 
 // Content 콘텐츠 모델
+// @Description 콘텐츠 정보를 담는 모델
 type Content struct {
 	ID           int64     `db:"id" json:"id"`
 	Title        string    `db:"title" json:"title" binding:"required"`
@@ -21,30 +22,33 @@ type Content struct {
 }
 
 // ContentListResponse 콘텐츠 목록 응답용 모델
+// @Description 콘텐츠 목록 조회 응답에 사용되는 모델
 type ContentListResponse struct {
-	ID           int64     `json:"id"`
-	Title        string    `json:"title"`
-	ThumbnailURL string    `json:"thumbnail_url"`
-	ReleaseYear  int       `json:"release_year"`
-	Genres       []string  `json:"genres"`
-	IsWishlisted bool      `json:"is_wishlisted"`
+	ID           int64    `json:"id"`
+	Title        string   `json:"title"`
+	ThumbnailURL string   `json:"thumbnail_url"`
+	ReleaseYear  int      `json:"release_year"`
+	Genres       []string `json:"genres"`
+	IsWishlisted bool     `json:"is_wishlisted"`
 }
 
 // ContentDetailResponse 콘텐츠 상세 응답용 모델
+// @Description 콘텐츠 상세 정보 조회 응답에 사용되는 모델
 type ContentDetailResponse struct {
-	ID           int64     `json:"id"`
-	Title        string    `json:"title"`
-	Description  string    `json:"description"`
-	ThumbnailURL string    `json:"thumbnail_url"`
-	VideoURL     string    `json:"video_url"`
-	Duration     int       `json:"duration"`
-	ReleaseYear  int       `json:"release_year"`
-	Genres       []Genre   `json:"genres"`
-	IsWishlisted bool      `json:"is_wishlisted"`
-	LastPosition int       `json:"last_position"`
+	ID           int64   `json:"id"`
+	Title        string  `json:"title"`
+	Description  string  `json:"description"`
+	ThumbnailURL string  `json:"thumbnail_url"`
+	VideoURL     string  `json:"video_url"`
+	Duration     int     `json:"duration"`
+	ReleaseYear  int     `json:"release_year"`
+	Genres       []Genre `json:"genres"`
+	IsWishlisted bool    `json:"is_wishlisted"`
+	LastPosition int     `json:"last_position"`
 }
 
 // Genre 장르 모델
+// @Description 장르 정보를 담는 모델
 type Genre struct {
 	ID          int64  `db:"id" json:"id"`
 	Name        string `db:"name" json:"name" binding:"required"`
@@ -52,10 +56,16 @@ type Genre struct {
 }
 
 // ContentGenre 콘텐츠-장르 매핑 모델
+// @Description 콘텐츠와 장르 간의 매핑 정보를 담는 모델
 type ContentGenre struct {
 	ID        int64 `db:"id" json:"id"`
 	ContentID int64 `db:"content_id" json:"content_id"`
 	GenreID   int64 `db:"genre_id" json:"genre_id"`
+}
+
+// @Description 장르별 콘텐츠 필터링 요청 DTO
+type GenreFilterRequest struct {
+	GenreID int64 `json:"genre_id" binding:"required"`
 }
 
 // GetContentList 콘텐츠 목록 조회
@@ -128,11 +138,11 @@ func GetContentList(db *sql.DB, userID int64) ([]ContentListResponse, error) {
 				WHERE 
 					user_id = ? AND content_id = ?
 			`, userID, contentID).Scan(&count)
-			
+
 			if err != nil {
 				return nil, err
 			}
-			
+
 			contentList[i].IsWishlisted = count > 0
 		}
 	}
@@ -152,7 +162,7 @@ func GetContentDetail(db *sql.DB, contentID, userID int64) (*ContentDetailRespon
 		WHERE 
 			id = ?
 	`, contentID).Scan(
-		&content.ID, &content.Title, &content.Description, 
+		&content.ID, &content.Title, &content.Description,
 		&content.ThumbnailURL, &content.VideoURL, &content.Duration, &content.ReleaseYear,
 	)
 
@@ -219,11 +229,11 @@ func GetContentDetail(db *sql.DB, contentID, userID int64) (*ContentDetailRespon
 		if err != nil && err != sql.ErrNoRows {
 			return nil, err
 		}
-		
+
 		if lastPosition.Valid {
 			content.LastPosition = int(lastPosition.Int64)
 		}
 	}
 
 	return &content, nil
-} 
+}

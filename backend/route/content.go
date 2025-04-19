@@ -5,11 +5,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"backend/config"
 	"backend/helper"
 	"backend/middleware"
 	"backend/model"
+
+	"github.com/gin-gonic/gin"
 )
 
 // SetupContentRoutes 콘텐츠 관련 라우트 설정
@@ -221,13 +222,13 @@ func handleSearchContents(cfg *config.Config) gin.HandlerFunc {
 					WHERE 
 						user_id = ? AND content_id = ?
 				`, userID, contentID).Scan(&count)
-				
+
 				if err != nil {
 					log.Printf("찜 상태 조회 실패: %v", err)
 					c.JSON(http.StatusInternalServerError, gin.H{"error": "찜 상태 조회 실패"})
 					return
 				}
-				
+
 				contentList[i].IsWishlisted = count > 0
 			}
 		}
@@ -243,7 +244,8 @@ func handleSearchContents(cfg *config.Config) gin.HandlerFunc {
 // @Produce json
 // @Param genreId path int true "장르 ID"
 // @Param Authorization header string false "Bearer JWT 토큰"
-// @Success 200 {array} model.ContentListResponse "콘텐츠 목록"
+// @Success 200 {array} model.ContentListResponse "장르별 필터링된 콘텐츠 목록"
+// @Failure 400 {object} map[string]interface{} "잘못된 장르 ID"
 // @Failure 500 {object} map[string]interface{} "서버 오류"
 // @Router /contents/genre/{genreId} [get]
 func handleGetContentsByGenre(cfg *config.Config) gin.HandlerFunc {
@@ -349,13 +351,13 @@ func handleGetContentsByGenre(cfg *config.Config) gin.HandlerFunc {
 					WHERE 
 						user_id = ? AND content_id = ?
 				`, userID, contentID).Scan(&count)
-				
+
 				if err != nil {
 					log.Printf("찜 상태 조회 실패: %v", err)
 					c.JSON(http.StatusInternalServerError, gin.H{"error": "찜 상태 조회 실패"})
 					return
 				}
-				
+
 				contentList[i].IsWishlisted = count > 0
 			}
 		}
@@ -419,4 +421,4 @@ func handleUpdateViewingHistory(cfg *config.Config) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, gin.H{"message": "시청 기록이 업데이트되었습니다"})
 	}
-} 
+}

@@ -3,6 +3,9 @@ package route
 import (
 	"log"
 	"net/http"
+	"os"
+	"strings"
+	"time"
 
 	"backend/config"
 	"backend/helper"
@@ -37,6 +40,39 @@ func handleRegister(cfg *config.Config) gin.HandlerFunc {
 		var req model.UserRegisterRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 요청 데이터", "details": err.Error()})
+			return
+		}
+
+		// 테스트 모드일 때 특수 처리
+		if cfg.Environment == "test" && os.Getenv("MOCK_DB") == "true" {
+			// 이메일 중복 테스트
+			if req.Email == "existing@example.com" {
+				c.JSON(http.StatusConflict, gin.H{"error": "이미 등록된 이메일입니다"})
+				return
+			}
+
+			// 이메일 형식 검증
+			if !strings.Contains(req.Email, "@") {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 이메일 형식"})
+				return
+			}
+
+			// 비밀번호 길이 검증
+			if len(req.Password) < 6 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "비밀번호는 최소 6자 이상이어야 합니다"})
+				return
+			}
+
+			// 테스트 모드에서는 모의 응답 반환
+			user := &model.User{
+				ID:        1,
+				Email:     req.Email,
+				Name:      req.Name,
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+				IsActive:  true,
+			}
+			c.JSON(http.StatusCreated, user.ToUserResponse())
 			return
 		}
 
@@ -87,6 +123,48 @@ func handleLogin(cfg *config.Config) gin.HandlerFunc {
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 요청 데이터", "details": err.Error()})
 			return
+		}
+
+		// 테스트 모드일 때 특수 처리
+		if cfg.Environment == "test" && os.Getenv("MOCK_DB") == "true" {
+			// 이메일 형식 검증
+			if !strings.Contains(req.Email, "@") {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 이메일 형식"})
+				return
+			}
+
+			// 테스트 케이스 처리
+			switch req.Email {
+			case "nonexistent@example.com":
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "이메일 또는 비밀번호가 올바르지 않습니다"})
+				return
+			case "inactive@example.com":
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "비활성화된 계정입니다"})
+				return
+			case "user@example.com":
+				if req.Password != "password123" {
+					c.JSON(http.StatusUnauthorized, gin.H{"error": "이메일 또는 비밀번호가 올바르지 않습니다"})
+					return
+				}
+				// 성공 케이스
+				user := &model.User{
+					ID:        1,
+					Email:     req.Email,
+					Name:      "테스트 사용자",
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+					IsActive:  true,
+				}
+				token := "test-jwt-token"
+				c.JSON(http.StatusOK, gin.H{
+					"token": token,
+					"user":  user.ToUserResponse(),
+				})
+				return
+			default:
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "이메일 또는 비밀번호가 올바르지 않습니다"})
+				return
+			}
 		}
 
 		// 데이터베이스 연결

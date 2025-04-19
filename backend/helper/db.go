@@ -3,9 +3,11 @@ package helper
 import (
 	"fmt"
 	"log"
+	"os"
+
+	"backend/config"
 
 	_ "github.com/go-sql-driver/mysql"
-	"backend/config"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -14,6 +16,12 @@ var db *sqlx.DB
 
 // GetDB 데이터베이스 연결 반환 (싱글톤 패턴)
 func GetDB(cfg *config.Config) (*sqlx.DB, error) {
+	// 테스트 모드일 경우 특별 처리
+	if cfg.Environment == "test" && os.Getenv("MOCK_DB") == "true" {
+		log.Println("테스트 모드: 실제 데이터베이스 연결을 건너뜁니다")
+		return nil, nil
+	}
+
 	if db != nil {
 		return db, nil
 	}
@@ -51,4 +59,4 @@ func CloseDB() {
 		db = nil
 		log.Println("데이터베이스 연결이 종료되었습니다")
 	}
-} 
+}

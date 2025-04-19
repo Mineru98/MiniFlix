@@ -34,6 +34,15 @@ func LoadConfig() *Config {
 		env = "development" // 기본값은 개발 환경
 	}
 
+	// 테스트 모드에서는 기본 설정을 바로 반환
+	if env == "test" && os.Getenv("MOCK_DB") == "true" {
+		config := getDefaultConfig()
+		overrideConfigFromEnv(&config)
+		config.Environment = env
+		config.ServerPort = config.Port
+		return &config
+	}
+
 	configFile := fmt.Sprintf("config/config.%s.json", env)
 	if _, err := os.Stat(configFile); errors.Is(err, os.ErrNotExist) {
 		// config.json을 대안으로 시도

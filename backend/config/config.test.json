@@ -1,0 +1,15 @@
+{
+  "environment": "test",
+  "host": "0.0.0.0",
+  "port": "8080",
+  "jwt_secret": "miniflix-test-secret-key",
+  "jwt_expire_hours": 24,
+  "db_host": "localhost",
+  "db_port": "3308",
+  "db_user": "miniflix",
+  "db_password": "miniflix",
+  "db_name": "miniflix_test",
+  "cors_allow_origins": ["http://localhost:3000"],
+  "media_path": "./test/assets/media",
+  "thumbnail_path": "./test/assets/thumbnails"
+} 

@@ -51,11 +51,24 @@ func SetupContentRoutesWithMockService(router *gin.RouterGroup, cfg *config.Conf
 // @Accept json
 // @Produce json
 // @Param Authorization header string false "Bearer JWT 토큰"
-// @Success 200 {object} model.ArrayResponse{data=[]model.ContentListResponse} "콘텐츠 목록"
+// @Param page query int false "페이지 번호 (기본값: 0)"
+// @Param size query int false "페이지당 항목 수 (기본값: 10)"
+// @Success 200 {object} model.PagingResponse "콘텐츠 목록"
 // @Failure 500 {object} model.ErrorResponse "서버 오류"
 // @Router /contents [get]
 func handleGetContentList(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// 페이징 파라미터 처리
+		page, err := strconv.Atoi(c.DefaultQuery("page", "0"))
+		if err != nil || page < 0 {
+			page = 0
+		}
+
+		size, err := strconv.Atoi(c.DefaultQuery("size", "10"))
+		if err != nil || size <= 0 {
+			size = 10
+		}
+
 		// 데이터베이스 연결
 		db, err := helper.GetDB(cfg)
 		if err != nil {
@@ -70,8 +83,8 @@ func handleGetContentList(cfg *config.Config) gin.HandlerFunc {
 			userID = c.GetInt64("userID")
 		}
 
-		// 콘텐츠 목록 조회
-		contentList, err := model.GetContentList(db.DB, userID)
+		// 콘텐츠 목록 조회 (페이징 적용)
+		pageInfo, err := model.GetContentList(db.DB, userID, page, size)
 		if err != nil {
 			log.Printf("콘텐츠 목록 조회 실패: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "콘텐츠 목록 조회 실패"})
@@ -80,7 +93,7 @@ func handleGetContentList(cfg *config.Config) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, gin.H{
 			"success": true,
-			"data":    contentList,
+			"data":    pageInfo,
 		})
 	}
 }
@@ -141,7 +154,10 @@ func handleGetContentDetail(cfg *config.Config) gin.HandlerFunc {
 // @Produce json
 // @Param q query string true "검색어"
 // @Param Authorization header string false "Bearer JWT 토큰"
-// @Success 200 {object} model.ArrayResponse{data=[]model.ContentListResponse} "검색 결과"
+// @Param page query int false "페이지 번호 (기본값: 0)"
+// @Param size query int false "페이지당 항목 수 (기본값: 10)"
+// @Success 200 {object} model.PagingResponse "검색 결과"
+// @Failure 400 {object} model.ErrorResponse "잘못된 요청"
 // @Failure 500 {object} model.ErrorResponse "서버 오류"
 // @Router /contents/search [get]
 func handleSearchContents(cfg *config.Config) gin.HandlerFunc {
@@ -153,6 +169,17 @@ func handleSearchContents(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
+		// 페이징 파라미터 처리
+		page, err := strconv.Atoi(c.DefaultQuery("page", "0"))
+		if err != nil || page < 0 {
+			page = 0
+		}
+
+		size, err := strconv.Atoi(c.DefaultQuery("size", "10"))
+		if err != nil || size <= 0 {
+			size = 10
+		}
+
 		// 데이터베이스 연결
 		db, err := helper.GetDB(cfg)
 		if err != nil {
@@ -167,98 +194,17 @@ func handleSearchContents(cfg *config.Config) gin.HandlerFunc {
 			userID = c.GetInt64("userID")
 		}
 
-		// 검색 쿼리 실행
-		rows, err := db.Query(`
-			SELECT 
-				c.id, c.title, c.thumbnail_url, c.release_year
-			FROM 
-				Contents c
-			WHERE 
-				c.title LIKE ?
-			ORDER BY 
-				c.release_year DESC, c.title ASC
-		`, "%"+query+"%")
+		// 검색 쿼리 실행 (페이징 적용)
+		pageInfo, err := model.SearchContents(db.DB, query, userID, page, size)
 		if err != nil {
 			log.Printf("콘텐츠 검색 실패: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "콘텐츠 검색 실패"})
 			return
 		}
-		defer rows.Close()
-
-		contentList := []model.ContentListResponse{}
-		contentIDs := []int64{}
-
-		// 기본 콘텐츠 정보 읽기
-		for rows.Next() {
-			var content model.ContentListResponse
-			if err := rows.Scan(&content.ID, &content.Title, &content.ThumbnailURL, &content.ReleaseYear); err != nil {
-				log.Printf("검색 결과 처리 실패: %v", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "검색 결과 처리 실패"})
-				return
-			}
-			contentList = append(contentList, content)
-			contentIDs = append(contentIDs, content.ID)
-		}
-
-		// 각 콘텐츠의 장르 정보 조회
-		for i, contentID := range contentIDs {
-			genreRows, err := db.Query(`
-				SELECT 
-					g.name
-				FROM 
-					Genres g
-				JOIN 
-					ContentGenres cg ON g.id = cg.genre_id
-				WHERE 
-					cg.content_id = ?
-			`, contentID)
-			if err != nil {
-				log.Printf("장르 정보 조회 실패: %v", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "장르 정보 조회 실패"})
-				return
-			}
-
-			var genres []string
-			for genreRows.Next() {
-				var genreName string
-				if err := genreRows.Scan(&genreName); err != nil {
-					genreRows.Close()
-					log.Printf("장르 정보 처리 실패: %v", err)
-					c.JSON(http.StatusInternalServerError, gin.H{"error": "장르 정보 처리 실패"})
-					return
-				}
-				genres = append(genres, genreName)
-			}
-			genreRows.Close()
-			contentList[i].Genres = genres
-		}
-
-		// 로그인한 사용자가 있는 경우 찜 정보 조회
-		if userID > 0 {
-			for i, contentID := range contentIDs {
-				var count int
-				err := db.QueryRow(`
-					SELECT 
-						COUNT(*)
-					FROM 
-						Wishlists
-					WHERE 
-						user_id = ? AND content_id = ?
-				`, userID, contentID).Scan(&count)
-
-				if err != nil {
-					log.Printf("찜 상태 조회 실패: %v", err)
-					c.JSON(http.StatusInternalServerError, gin.H{"error": "찜 상태 조회 실패"})
-					return
-				}
-
-				contentList[i].IsWishlisted = count > 0
-			}
-		}
 
 		c.JSON(http.StatusOK, gin.H{
 			"success": true,
-			"data":    contentList,
+			"data":    pageInfo,
 		})
 	}
 }
@@ -270,8 +216,10 @@ func handleSearchContents(cfg *config.Config) gin.HandlerFunc {
 // @Produce json
 // @Param genreId path int true "장르 ID"
 // @Param Authorization header string false "Bearer JWT 토큰"
-// @Success 200 {object} model.ArrayResponse{data=[]model.ContentListResponse} "장르별 필터링된 콘텐츠 목록"
-// @Failure 400 {object} model.ErrorResponse "잘못된 장르 ID"
+// @Param page query int false "페이지 번호 (기본값: 0)"
+// @Param size query int false "페이지당 항목 수 (기본값: 10)"
+// @Success 200 {object} model.PagingResponse "장르별 콘텐츠 목록"
+// @Failure 400 {object} model.ErrorResponse "잘못된 요청"
 // @Failure 500 {object} model.ErrorResponse "서버 오류"
 // @Router /contents/genre/{genreId} [get]
 func handleGetContentsByGenre(cfg *config.Config) gin.HandlerFunc {
@@ -281,6 +229,17 @@ func handleGetContentsByGenre(cfg *config.Config) gin.HandlerFunc {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 장르 ID"})
 			return
+		}
+
+		// 페이징 파라미터 처리
+		page, err := strconv.Atoi(c.DefaultQuery("page", "0"))
+		if err != nil || page < 0 {
+			page = 0
+		}
+
+		size, err := strconv.Atoi(c.DefaultQuery("size", "10"))
+		if err != nil || size <= 0 {
+			size = 10
 		}
 
 		// 데이터베이스 연결
@@ -297,100 +256,17 @@ func handleGetContentsByGenre(cfg *config.Config) gin.HandlerFunc {
 			userID = c.GetInt64("userID")
 		}
 
-		// 장르별 콘텐츠 조회
-		rows, err := db.Query(`
-			SELECT 
-				c.id, c.title, c.thumbnail_url, c.release_year
-			FROM 
-				Contents c
-			JOIN 
-				ContentGenres cg ON c.id = cg.content_id
-			WHERE 
-				cg.genre_id = ?
-			ORDER BY 
-				c.release_year DESC, c.title ASC
-		`, genreID)
+		// 장르별 콘텐츠 조회 (페이징 적용)
+		pageInfo, err := model.GetContentsByGenre(db.DB, genreID, userID, page, size)
 		if err != nil {
 			log.Printf("장르별 콘텐츠 조회 실패: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "장르별 콘텐츠 조회 실패"})
 			return
 		}
-		defer rows.Close()
-
-		contentList := []model.ContentListResponse{}
-		contentIDs := []int64{}
-
-		// 기본 콘텐츠 정보 읽기
-		for rows.Next() {
-			var content model.ContentListResponse
-			if err := rows.Scan(&content.ID, &content.Title, &content.ThumbnailURL, &content.ReleaseYear); err != nil {
-				log.Printf("콘텐츠 정보 처리 실패: %v", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "콘텐츠 정보 처리 실패"})
-				return
-			}
-			contentList = append(contentList, content)
-			contentIDs = append(contentIDs, content.ID)
-		}
-
-		// 각 콘텐츠의 장르 정보 조회
-		for i, contentID := range contentIDs {
-			genreRows, err := db.Query(`
-				SELECT 
-					g.name
-				FROM 
-					Genres g
-				JOIN 
-					ContentGenres cg ON g.id = cg.genre_id
-				WHERE 
-					cg.content_id = ?
-			`, contentID)
-			if err != nil {
-				log.Printf("장르 정보 조회 실패: %v", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "장르 정보 조회 실패"})
-				return
-			}
-
-			var genres []string
-			for genreRows.Next() {
-				var genreName string
-				if err := genreRows.Scan(&genreName); err != nil {
-					genreRows.Close()
-					log.Printf("장르 정보 처리 실패: %v", err)
-					c.JSON(http.StatusInternalServerError, gin.H{"error": "장르 정보 처리 실패"})
-					return
-				}
-				genres = append(genres, genreName)
-			}
-			genreRows.Close()
-			contentList[i].Genres = genres
-		}
-
-		// 로그인한 사용자가 있는 경우 찜 정보 조회
-		if userID > 0 {
-			for i, contentID := range contentIDs {
-				var count int
-				err := db.QueryRow(`
-					SELECT 
-						COUNT(*)
-					FROM 
-						Wishlists
-					WHERE 
-						user_id = ? AND content_id = ?
-				`, userID, contentID).Scan(&count)
-
-				if err != nil {
-					log.Printf("찜 상태 조회 실패: %v", err)
-					c.JSON(http.StatusInternalServerError, gin.H{"error": "찜 상태 조회 실패"})
-					return
-				}
-
-				contentList[i].IsWishlisted = count > 0
-			}
-		}
 
 		c.JSON(http.StatusOK, gin.H{
 			"success": true,
-			"data":    contentList,
+			"data":    pageInfo,
 		})
 	}
 }

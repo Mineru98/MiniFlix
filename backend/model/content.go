@@ -69,8 +69,24 @@ type GenreFilterRequest struct {
 }
 
 // GetContentList 콘텐츠 목록 조회
-func GetContentList(db *sql.DB, userID int64) ([]ContentListResponse, error) {
-	// 기본 콘텐츠 쿼리
+func GetContentList(db *sql.DB, userID int64, page, size int) (*PageInfo, error) {
+	// 페이징 설정
+	if page < 0 {
+		page = 0
+	}
+	if size <= 0 {
+		size = 10
+	}
+	offset := page * size
+
+	// 전체 콘텐츠 수 조회
+	var totalElements int
+	err := db.QueryRow("SELECT COUNT(*) FROM Contents").Scan(&totalElements)
+	if err != nil {
+		return nil, err
+	}
+
+	// 기본 콘텐츠 쿼리 (페이징 적용)
 	rows, err := db.Query(`
 		SELECT 
 			c.id, c.title, c.thumbnail_url, c.release_year
@@ -78,7 +94,8 @@ func GetContentList(db *sql.DB, userID int64) ([]ContentListResponse, error) {
 			Contents c
 		ORDER BY 
 			c.release_year DESC, c.title ASC
-	`)
+		LIMIT ? OFFSET ?
+	`, size, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +164,28 @@ func GetContentList(db *sql.DB, userID int64) ([]ContentListResponse, error) {
 		}
 	}
 
-	return contentList, nil
+	// 페이징 정보 구성
+	totalPages := (totalElements + size - 1) / size // 올림 계산
+	numberOfElements := len(contentList)
+
+	pageInfo := &PageInfo{
+		Content: contentList,
+		Pageable: Pageable{
+			PageNumber: page,
+			PageSize:   size,
+			Offset:     offset,
+		},
+		TotalPages:       totalPages,
+		TotalElements:    totalElements,
+		Last:             page >= totalPages-1,
+		Size:             size,
+		Number:           page,
+		NumberOfElements: numberOfElements,
+		First:            page == 0,
+		Empty:            numberOfElements == 0,
+	}
+
+	return pageInfo, nil
 }
 
 // GetContentDetail 콘텐츠 상세 정보 조회
@@ -236,4 +274,259 @@ func GetContentDetail(db *sql.DB, contentID, userID int64) (*ContentDetailRespon
 	}
 
 	return &content, nil
+}
+
+// SearchContents 콘텐츠 검색 (페이징 지원)
+func SearchContents(db *sql.DB, query string, userID int64, page, size int) (*PageInfo, error) {
+	// 페이징 설정
+	if page < 0 {
+		page = 0
+	}
+	if size <= 0 {
+		size = 10
+	}
+	offset := page * size
+
+	// 전체 검색 결과 수 조회
+	var totalElements int
+	err := db.QueryRow(`
+		SELECT COUNT(*) 
+		FROM Contents c
+		WHERE c.title LIKE ?
+	`, "%"+query+"%").Scan(&totalElements)
+	if err != nil {
+		return nil, err
+	}
+
+	// 검색 쿼리 실행 (페이징 적용)
+	rows, err := db.Query(`
+		SELECT 
+			c.id, c.title, c.thumbnail_url, c.release_year
+		FROM 
+			Contents c
+		WHERE 
+			c.title LIKE ?
+		ORDER BY 
+			c.release_year DESC, c.title ASC
+		LIMIT ? OFFSET ?
+	`, "%"+query+"%", size, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	contentList := []ContentListResponse{}
+	contentIDs := []int64{}
+
+	// 기본 콘텐츠 정보 읽기
+	for rows.Next() {
+		var content ContentListResponse
+		if err := rows.Scan(&content.ID, &content.Title, &content.ThumbnailURL, &content.ReleaseYear); err != nil {
+			return nil, err
+		}
+		contentList = append(contentList, content)
+		contentIDs = append(contentIDs, content.ID)
+	}
+
+	// 각 콘텐츠의 장르 정보 조회
+	for i, contentID := range contentIDs {
+		genreRows, err := db.Query(`
+			SELECT 
+				g.name
+			FROM 
+				Genres g
+			JOIN 
+				ContentGenres cg ON g.id = cg.genre_id
+			WHERE 
+				cg.content_id = ?
+		`, contentID)
+		if err != nil {
+			return nil, err
+		}
+
+		var genres []string
+		for genreRows.Next() {
+			var genreName string
+			if err := genreRows.Scan(&genreName); err != nil {
+				genreRows.Close()
+				return nil, err
+			}
+			genres = append(genres, genreName)
+		}
+		genreRows.Close()
+		contentList[i].Genres = genres
+	}
+
+	// 로그인한 사용자가 있는 경우 찜 정보 조회
+	if userID > 0 {
+		for i, contentID := range contentIDs {
+			var count int
+			err := db.QueryRow(`
+				SELECT 
+					COUNT(*)
+				FROM 
+					Wishlists
+				WHERE 
+					user_id = ? AND content_id = ?
+			`, userID, contentID).Scan(&count)
+
+			if err != nil {
+				return nil, err
+			}
+
+			contentList[i].IsWishlisted = count > 0
+		}
+	}
+
+	// 페이징 정보 구성
+	totalPages := (totalElements + size - 1) / size // 올림 계산
+	numberOfElements := len(contentList)
+
+	pageInfo := &PageInfo{
+		Content: contentList,
+		Pageable: Pageable{
+			PageNumber: page,
+			PageSize:   size,
+			Offset:     offset,
+		},
+		TotalPages:       totalPages,
+		TotalElements:    totalElements,
+		Last:             page >= totalPages-1,
+		Size:             size,
+		Number:           page,
+		NumberOfElements: numberOfElements,
+		First:            page == 0,
+		Empty:            numberOfElements == 0,
+	}
+
+	return pageInfo, nil
+}
+
+// GetContentsByGenre 장르별 콘텐츠 조회 (페이징 지원)
+func GetContentsByGenre(db *sql.DB, genreID, userID int64, page, size int) (*PageInfo, error) {
+	// 페이징 설정
+	if page < 0 {
+		page = 0
+	}
+	if size <= 0 {
+		size = 10
+	}
+	offset := page * size
+
+	// 전체 장르별 콘텐츠 수 조회
+	var totalElements int
+	err := db.QueryRow(`
+		SELECT COUNT(*) 
+		FROM Contents c
+		JOIN ContentGenres cg ON c.id = cg.content_id
+		WHERE cg.genre_id = ?
+	`, genreID).Scan(&totalElements)
+	if err != nil {
+		return nil, err
+	}
+
+	// 장르별 콘텐츠 쿼리 실행 (페이징 적용)
+	rows, err := db.Query(`
+		SELECT 
+			c.id, c.title, c.thumbnail_url, c.release_year
+		FROM 
+			Contents c
+		JOIN 
+			ContentGenres cg ON c.id = cg.content_id
+		WHERE 
+			cg.genre_id = ?
+		ORDER BY 
+			c.release_year DESC, c.title ASC
+		LIMIT ? OFFSET ?
+	`, genreID, size, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	contentList := []ContentListResponse{}
+	contentIDs := []int64{}
+
+	// 기본 콘텐츠 정보 읽기
+	for rows.Next() {
+		var content ContentListResponse
+		if err := rows.Scan(&content.ID, &content.Title, &content.ThumbnailURL, &content.ReleaseYear); err != nil {
+			return nil, err
+		}
+		contentList = append(contentList, content)
+		contentIDs = append(contentIDs, content.ID)
+	}
+
+	// 각 콘텐츠의 장르 정보 조회
+	for i, contentID := range contentIDs {
+		genreRows, err := db.Query(`
+			SELECT 
+				g.name
+			FROM 
+				Genres g
+			JOIN 
+				ContentGenres cg ON g.id = cg.genre_id
+			WHERE 
+				cg.content_id = ?
+		`, contentID)
+		if err != nil {
+			return nil, err
+		}
+
+		var genres []string
+		for genreRows.Next() {
+			var genreName string
+			if err := genreRows.Scan(&genreName); err != nil {
+				genreRows.Close()
+				return nil, err
+			}
+			genres = append(genres, genreName)
+		}
+		genreRows.Close()
+		contentList[i].Genres = genres
+	}
+
+	// 로그인한 사용자가 있는 경우 찜 정보 조회
+	if userID > 0 {
+		for i, contentID := range contentIDs {
+			var count int
+			err := db.QueryRow(`
+				SELECT 
+					COUNT(*)
+				FROM 
+					Wishlists
+				WHERE 
+					user_id = ? AND content_id = ?
+			`, userID, contentID).Scan(&count)
+
+			if err != nil {
+				return nil, err
+			}
+
+			contentList[i].IsWishlisted = count > 0
+		}
+	}
+
+	// 페이징 정보 구성
+	totalPages := (totalElements + size - 1) / size // 올림 계산
+	numberOfElements := len(contentList)
+
+	pageInfo := &PageInfo{
+		Content: contentList,
+		Pageable: Pageable{
+			PageNumber: page,
+			PageSize:   size,
+			Offset:     offset,
+		},
+		TotalPages:       totalPages,
+		TotalElements:    totalElements,
+		Last:             page >= totalPages-1,
+		Size:             size,
+		Number:           page,
+		NumberOfElements: numberOfElements,
+		First:            page == 0,
+		Empty:            numberOfElements == 0,
+	}
+
+	return pageInfo, nil
 }

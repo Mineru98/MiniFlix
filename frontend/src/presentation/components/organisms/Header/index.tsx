@@ -26,10 +26,7 @@ import {
   DropdownItem,
   DropdownDivider
 } from './styles';
-
-interface HeaderProps {
-  className?: string;
-}
+import { HeaderProps } from './types';
 
 const Header: React.FC<HeaderProps> = ({ className }) => {
   const router = useRouter();
@@ -217,7 +214,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
           onClick={toggleProfileDropdown} 
           data-profile-section
         >
-          <ProfileImage src="/images/profile-avatar.png" alt="프로필" />
+          <ProfileImage src="/images/account/profile-image-1.png" alt="프로필" />
           <ChevronDown size={16} />
           <ProfileDropdown 
             ref={profileDropdownRef}
@@ -228,7 +225,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
               <span>앱 설정</span>
             </DropdownItem>
             <Link href="/account">
-              <DropdownItem>
+              <DropdownItem onClick={() => setShowProfileDropdown(false)}>
                 <User size={16} className="mr-2" />
                 <span>계정</span>
               </DropdownItem>

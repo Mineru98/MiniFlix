@@ -30,6 +30,7 @@ export default function App({ Component, pageProps }: AppProps) {
   
   // 비디오 플레이어 화면인지 확인하는 상태
   const isWatchPage = router.pathname.startsWith('/watch/');
+  const isAccountPage = router.pathname.startsWith('/account');
 
   useEffect(() => {
     // 컴포넌트가 마운트되면 상태 업데이트
@@ -76,12 +77,12 @@ export default function App({ Component, pageProps }: AppProps) {
         <SplashPage isLoading={isLoading} />
       ) : (
         <React.Fragment>
-          {isAuthenticated && <Header className={isWatchPage ? 'hide' : ''} />}
+          {isAuthenticated && <Header className={isWatchPage || isAccountPage ? 'hide' : ''} />}
           <Head>
             <title>MiniFlix</title>
           </Head>
           <Component {...pageProps} />
-          {isAuthenticated && <NavigationBar className={isWatchPage ? 'hide' : ''} />}
+          {isAuthenticated && <NavigationBar className={isWatchPage || isAccountPage  ? 'hide' : ''} />}
         </React.Fragment>
       )}
     </ToastProvider>

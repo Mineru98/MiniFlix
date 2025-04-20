@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import useContentSearchStore from '@/application/store/content-search';
 import useAuthStore from '@/application/store/auth';
 import { searchContents } from '@/infrastructure/api';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import { 
   HeaderContainer, 
@@ -39,6 +39,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const { searchQuery, setSearchQuery, clearSearchQuery, setIsSearching } = useContentSearchStore();
   const { clearAuth } = useAuthStore();
+  const queryClient = useQueryClient();
   
   // 계정 페이지 여부 확인
   const isAccountPage = router.pathname.startsWith('/account');
@@ -117,8 +118,9 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
   // 로그아웃 처리 함수
   const handleSignOut = useCallback(() => {
     clearAuth();
+    queryClient.resetQueries();
     router.push('/login');
-  }, [clearAuth, router]);
+  }, [clearAuth, queryClient, router]);
 
   // 검색 결과 가져오기
   const { data: searchResults } = useQuery({

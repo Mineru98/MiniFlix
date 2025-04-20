@@ -1,20 +1,13 @@
 import React from 'react';
-import { ContentListResponse } from '@/infrastructure/api';
 import ContentCard from '@/presentation/components/molecules/ContentCard';
 import { RowContainer, RowTitle, ContentContainer, LoadingContainer } from './styles';
-
-interface ContentRowProps {
-  title: string;
-  contents: ContentListResponse[];
-  isLoading?: boolean;
-  emptyIcon?: React.ReactNode;
-}
-
+import { ContentRowProps } from './types';
 const ContentRow: React.FC<ContentRowProps> = ({ 
   title, 
   contents, 
   isLoading = false,
-  emptyIcon
+  emptyIcon,
+  emptyMessage = '콘텐츠를 불러올 수 없습니다.'
 }) => {
   return (
     <RowContainer>
@@ -40,7 +33,7 @@ const ContentRow: React.FC<ContentRowProps> = ({
             {emptyIcon && (
               <div className="flex flex-col items-center justify-center p-4">
                 <div className="text-gray-500 mb-2">{emptyIcon}</div>
-                <p className="text-sm text-gray-500">콘텐츠를 불러올 수 없습니다.</p>
+                <p className="text-sm text-gray-500">{emptyMessage}</p>
               </div>
             )}
           </LoadingContainer>

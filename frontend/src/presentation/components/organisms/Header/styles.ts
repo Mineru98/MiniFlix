@@ -70,6 +70,7 @@ export const RightSection = styled.div`
   display: flex;
   align-items: center;
   margin-left: auto;
+  position: relative;
 `;
 
 export const SearchButton = styled.button`
@@ -139,5 +140,62 @@ export const ProfileDropdown = styled.div`
 
   ${ProfileSection}:hover & {
     display: block;
+  }
+`;
+
+export const SearchContainer = styled.div`
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 300px;
+  background-color: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  padding: 1rem;
+  z-index: 10;
+  margin-top: 0.5rem;
+`;
+
+export const SearchInput = styled.input`
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 0.9rem;
+  outline: none;
+  padding: 0.5rem 0;
+`;
+
+export const CloseButton = styled.button`
+  background: transparent;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.5rem;
+
+  &:hover {
+    color: white;
+  }
+`;
+
+export const SearchResults = styled.div`
+  margin-top: 0.75rem;
+  max-height: 300px;
+  overflow-y: auto;
+`;
+
+export const SearchResultItem = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 0.5rem;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 0.9rem;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
   }
 `;

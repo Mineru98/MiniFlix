@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import type { AppProps } from 'next/app';
 import '../styles/globals.css';
 import SplashPage from '@/presentation/components/organisms/SplashPage';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'react-hot-toast';
 import dynamic from 'next/dynamic';
 import useAuthStore from '@/application/store/auth';
 import { useRouter } from 'next/router';
+import { QueryProvider, ToastProvider } from '@/providers';
 
 // 클라이언트 사이드에서만 렌더링되도록 dynamic import 사용
 const Header = dynamic(
@@ -24,15 +23,6 @@ export default function App({ Component, pageProps }: AppProps) {
   const [isLoading, setIsLoading] = useState(true);
   const { isAuthenticated } = useAuthStore();
   const router = useRouter();
-  const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: 3,
-        refetchOnWindowFocus: false,
-        staleTime: 5 * 60 * 1000, // 5분
-      },
-    },
-  }));
 
   // 클라이언트 측에서 동적으로 컴포넌트 렌더링을 위한 상태
   const [isMounted, setIsMounted] = useState(false);
@@ -63,14 +53,17 @@ export default function App({ Component, pageProps }: AppProps) {
   // 마운트되기 전에는 빈 페이지 또는 스플래시 화면만 표시
   if (!isMounted) {
     return (
-      <QueryClientProvider client={queryClient}>
-        <SplashPage isLoading={true} />
-      </QueryClientProvider>
+      <QueryProvider>
+        <ToastProvider> 
+          <SplashPage isLoading={true} />
+        </ToastProvider>
+      </QueryProvider>
     );
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryProvider>
+      <ToastProvider>
       {shouldShowSplash() ? (
         <SplashPage isLoading={isLoading} />
       ) : (
@@ -80,7 +73,7 @@ export default function App({ Component, pageProps }: AppProps) {
           {isAuthenticated && <NavigationBar />}
         </>
       )}
-      <Toaster position="top-center" />
-    </QueryClientProvider>
+    </ToastProvider>
+    </QueryProvider>
   );
 } 

@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Search, Bell, ChevronDown, X } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Search, Bell, ChevronDown, X, Settings, User, HelpCircle, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import useContentSearchStore from '@/application/store/content-search';
+import useAuthStore from '@/application/store/auth';
 import { searchContents } from '@/infrastructure/api';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -21,16 +22,21 @@ import {
   SearchInput,
   SearchResults,
   SearchResultItem,
-  CloseButton
+  CloseButton,
+  DropdownItem,
+  DropdownDivider
 } from './styles';
 
 const Header: React.FC = () => {
   const router = useRouter();
   const [showSearch, setShowSearch] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
   const { searchQuery, setSearchQuery, clearSearchQuery, setIsSearching } = useContentSearchStore();
+  const { clearAuth } = useAuthStore();
 
   // 반응형 처리를 위한 윈도우 크기 감지
   useEffect(() => {
@@ -50,11 +56,19 @@ const Header: React.FC = () => {
     };
   }, []);
 
-  // 검색창 외부 클릭 시 검색창 닫기
+  // 검색창 및 프로필 드롭다운 외부 클릭 시 닫기
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowSearch(false);
+      }
+      
+      if (
+        profileDropdownRef.current && 
+        !profileDropdownRef.current.contains(event.target as Node) &&
+        !(event.target as Element).closest('[data-profile-section]')
+      ) {
+        setShowProfileDropdown(false);
       }
     };
 
@@ -85,10 +99,21 @@ const Header: React.FC = () => {
     }
   };
 
+  // 프로필 드롭다운 토글
+  const toggleProfileDropdown = useCallback(() => {
+    setShowProfileDropdown(prev => !prev);
+  }, []);
+
   // 검색어 변경 핸들러
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
+
+  // 로그아웃 처리 함수
+  const handleSignOut = useCallback(() => {
+    clearAuth();
+    router.push('/login');
+  }, [clearAuth, router]);
 
   // 검색 결과 가져오기
   const { data: searchResults } = useQuery({
@@ -184,10 +209,36 @@ const Header: React.FC = () => {
         <NotificationButton>
           <Bell size={20} />
         </NotificationButton>
-        <ProfileSection>
+        <ProfileSection 
+          onClick={toggleProfileDropdown} 
+          data-profile-section
+        >
           <ProfileImage src="/images/profile-avatar.png" alt="프로필" />
           <ChevronDown size={16} />
-          <ProfileDropdown />
+          <ProfileDropdown 
+            ref={profileDropdownRef}
+            className={showProfileDropdown ? 'active' : ''}
+          >
+            <DropdownItem>
+              <Settings size={16} className="mr-2" />
+              <span>App Settings</span>
+            </DropdownItem>
+            <Link href="/account">
+              <DropdownItem>
+                <User size={16} className="mr-2" />
+                <span>Account</span>
+              </DropdownItem>
+            </Link>
+            <DropdownItem>
+              <HelpCircle size={16} className="mr-2" />
+              <span>Help</span>
+            </DropdownItem>
+            <DropdownDivider />
+            <DropdownItem onClick={handleSignOut}>
+              <LogOut size={16} className="mr-2" />
+              <span>Sign Out</span>
+            </DropdownItem>
+          </ProfileDropdown>
         </ProfileSection>
       </RightSection>
     </HeaderContainer>

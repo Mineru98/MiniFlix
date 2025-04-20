@@ -114,7 +114,6 @@ export const ProfileSection = styled.div`
   position: relative;
   cursor: pointer;
   padding: 0.2rem;
-  overflow: hidden;
 `;
 
 export const ProfileImage = styled.img`
@@ -136,11 +135,55 @@ export const ProfileDropdown = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 3px;
   min-width: 180px;
-  display: none;
+  padding: 0.5rem 0;
+  margin-top: 0.5rem;
+  z-index: 999;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0.15s;
+  pointer-events: none;
 
   ${ProfileSection}:hover & {
-    display: block;
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
   }
+
+  &.active {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+`;
+
+export const DropdownItem = styled.div<{ as?: string }>`
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  color: #e5e5e5;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+  text-decoration: none;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+  }
+`;
+
+export const DropdownDivider = styled.div`
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.15);
+  margin: 0.5rem 0;
 `;
 
 export const SearchContainer = styled.div`

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { X, Play, Download, Plus, Share, ThumbsUp } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { useContentDetail } from '@/application/hooks/api/content/use_content_detail';
@@ -27,6 +27,12 @@ const ContentDetailView: React.FC<ContentDetailViewProps> = ({ content, isLoadin
   const { mutate: toggleWishlist, isLoading: isWishlistLoading } = useToggleWishlist(
     contentId || 0
   );
+
+  useEffect(() => {
+    if (content) {
+      setIsWishlisted(content.is_wishlisted);
+    }
+  }, [content]);
 
   const handleClose = useCallback(() => {
     router.back();

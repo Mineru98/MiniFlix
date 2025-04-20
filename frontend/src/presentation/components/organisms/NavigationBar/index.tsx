@@ -7,11 +7,7 @@ import {
   IconWrapper,
   NotificationBadge
 } from './styles';
-
-interface NavigationBarProps {
-  className?: string;
-}
-
+import { NavigationBarProps } from './types';
 const NavigationBar: React.FC<NavigationBarProps> = ({ className }) => {
   return (
     <NavContainer className={className}>

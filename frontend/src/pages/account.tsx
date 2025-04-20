@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import useAuthStore from '@/application/store/auth';
-import AccountView from '@/presentation/features/account/AccountView';
+import AccountView from '@/presentation/features/account';
 
 const AccountPage: React.FC = () => {
   const router = useRouter();

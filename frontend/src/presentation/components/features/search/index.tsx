@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { Search, X } from 'lucide-react';
 import { 
   SearchBarContainer, 
@@ -8,15 +8,7 @@ import {
   ClearButton 
 } from './styles';
 import { SEARCH_CONSTANTS } from './constants';
-
-interface SearchBarProps {
-  query: string;
-  onSearch: () => void;
-  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  onClear: () => void;
-}
-
+import { SearchBarProps } from './types';
 const SearchBar: React.FC<SearchBarProps> = ({
   query,
   onSearch,

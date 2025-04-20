@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import { ImageIcon } from "lucide-react";
 
 export const CardContainer = styled.div`
   position: relative;

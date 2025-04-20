@@ -135,8 +135,8 @@ export const ProfileDropdown = styled.div`
   position: absolute;
   top: calc(100% + 0.5rem);
   right: 0;
-  background-color: rgba(0, 0, 0, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background-color: rgba(0, 0, 0, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 3px;
   min-width: 180px;
   padding: 0.5rem 0;
@@ -149,6 +149,7 @@ export const ProfileDropdown = styled.div`
     transform 0.15s ease,
     visibility 0.15s;
   pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 
   ${ProfileSection}:hover & {
     visibility: visible;
@@ -169,7 +170,7 @@ export const DropdownItem = styled.div<{ as?: string }>`
   display: flex;
   align-items: center;
   padding: 0.5rem 1rem;
-  color: #e5e5e5;
+  color: #ffffff;
   font-size: 0.9rem;
   cursor: pointer;
   transition:
@@ -178,8 +179,7 @@ export const DropdownItem = styled.div<{ as?: string }>`
   text-decoration: none;
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
+    /* hover 스타일은 이제 JS로 처리 */
   }
 `;
 

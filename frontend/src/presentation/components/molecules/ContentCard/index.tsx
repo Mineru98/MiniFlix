@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Info, MoreVertical, Plus, ImageIcon } from 'lucide-react';
+import { Info, Plus, ImageIcon } from 'lucide-react';
 import { 
   CardContainer,
   CardImage,

@@ -155,7 +155,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
         }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', height: '28px' }}>
             <Image 
-              src="/images/account/netflix-logo.svg" 
+              src="/images/netflix-logo.svg" 
               alt="Netflix" 
               width={90} 
               height={30} 
@@ -189,18 +189,47 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
               ref={profileDropdownRef}
               className={showProfileDropdown ? 'active' : ''}
               style={{ 
-                backgroundColor: '#fff', 
+                backgroundColor: '#ffffff', 
                 color: '#000', 
-                border: '1px solid rgba(0, 0, 0, 0.15)',
+                border: '1px solid rgba(0, 0, 0, 0.2)',
                 top: 'calc(100% + 8px)',
-                position: 'absolute'
+                position: 'absolute',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
               }}
             >
-              <DropdownItem onClick={() => router.push('/')}>
+              <DropdownItem 
+                onClick={() => router.push('/')}
+                style={{ 
+                  color: '#000000',
+                  transition: 'background-color 0.2s, color 0.2s'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(229, 9, 20, 0.8)';
+                  e.currentTarget.style.color = '#ffffff';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = '#000000';
+                }}
+              >
                 <User size={16} className="mr-2" />
                 <span>홈</span>
               </DropdownItem>
-              <DropdownItem onClick={handleSignOut}>
+              <DropdownItem 
+                onClick={handleSignOut}
+                style={{ 
+                  color: '#000000',
+                  transition: 'background-color 0.2s, color 0.2s'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(229, 9, 20, 0.8)';
+                  e.currentTarget.style.color = '#ffffff';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = '#000000';
+                }}
+              >
                 <LogOut size={16} className="mr-2" />
                 <span>로그아웃</span>
               </DropdownItem>
@@ -299,22 +328,60 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
             ref={profileDropdownRef}
             className={showProfileDropdown ? 'active' : ''}
           >
-            <DropdownItem>
+            <DropdownItem
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(229, 9, 20, 0.8)';
+                e.currentTarget.style.color = '#ffffff';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#ffffff';
+              }}
+            >
               <Settings size={16} className="mr-2" />
               <span>앱 설정</span>
             </DropdownItem>
             <Link href="/account">
-              <DropdownItem onClick={() => setShowProfileDropdown(false)}>
+              <DropdownItem 
+                onClick={() => setShowProfileDropdown(false)}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(229, 9, 20, 0.8)';
+                  e.currentTarget.style.color = '#ffffff';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = '#ffffff';
+                }}
+              >
                 <User size={16} className="mr-2" />
                 <span>계정</span>
               </DropdownItem>
             </Link>
-            <DropdownItem>
+            <DropdownItem
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(229, 9, 20, 0.8)';
+                e.currentTarget.style.color = '#ffffff';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#ffffff';
+              }}
+            >
               <HelpCircle size={16} className="mr-2" />
               <span>도움말</span>
             </DropdownItem>
             <DropdownDivider />
-            <DropdownItem onClick={handleSignOut}>
+            <DropdownItem 
+              onClick={handleSignOut}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(229, 9, 20, 0.8)';
+                e.currentTarget.style.color = '#ffffff';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#ffffff';
+              }}
+            >
               <LogOut size={16} className="mr-2" />
               <span>로그아웃</span>
             </DropdownItem>

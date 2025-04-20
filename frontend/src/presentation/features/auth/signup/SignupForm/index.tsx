@@ -4,7 +4,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRegister } from '@/application/hooks/api/auth';
 import { AxiosError } from 'axios';
-import { SignupFormProps } from './types';
 
 const SignupForm = () => {
   const [email, setEmail] = useState('');

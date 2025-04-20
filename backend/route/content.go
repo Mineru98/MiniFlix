@@ -170,7 +170,7 @@ func handleSearchContents(cfg *config.Config) gin.HandlerFunc {
 		// 검색 쿼리 실행
 		rows, err := db.Query(`
 			SELECT 
-				c.id, c.title, c.thumbnail_url, c.release_year
+				c.id, c.title, c.release_year
 			FROM 
 				Contents c
 			WHERE 
@@ -191,11 +191,13 @@ func handleSearchContents(cfg *config.Config) gin.HandlerFunc {
 		// 기본 콘텐츠 정보 읽기
 		for rows.Next() {
 			var content model.ContentListResponse
-			if err := rows.Scan(&content.ID, &content.Title, &content.ThumbnailURL, &content.ReleaseYear); err != nil {
+			if err := rows.Scan(&content.ID, &content.Title, &content.ReleaseYear); err != nil {
 				log.Printf("검색 결과 처리 실패: %v", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "검색 결과 처리 실패"})
 				return
 			}
+			// 동적 썸네일 URL 설정
+			content.ThumbnailURL = model.DynamicThumbnailURL(content.ID)
 			contentList = append(contentList, content)
 			contentIDs = append(contentIDs, content.ID)
 		}
@@ -300,7 +302,7 @@ func handleGetContentsByGenre(cfg *config.Config) gin.HandlerFunc {
 		// 장르별 콘텐츠 조회
 		rows, err := db.Query(`
 			SELECT 
-				c.id, c.title, c.thumbnail_url, c.release_year
+				c.id, c.title, c.release_year
 			FROM 
 				Contents c
 			JOIN 
@@ -323,11 +325,13 @@ func handleGetContentsByGenre(cfg *config.Config) gin.HandlerFunc {
 		// 기본 콘텐츠 정보 읽기
 		for rows.Next() {
 			var content model.ContentListResponse
-			if err := rows.Scan(&content.ID, &content.Title, &content.ThumbnailURL, &content.ReleaseYear); err != nil {
+			if err := rows.Scan(&content.ID, &content.Title, &content.ReleaseYear); err != nil {
 				log.Printf("콘텐츠 정보 처리 실패: %v", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "콘텐츠 정보 처리 실패"})
 				return
 			}
+			// 동적 썸네일 URL 설정
+			content.ThumbnailURL = model.DynamicThumbnailURL(content.ID)
 			contentList = append(contentList, content)
 			contentIDs = append(contentIDs, content.ID)
 		}

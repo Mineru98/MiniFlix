@@ -91,7 +91,7 @@ func GetViewingHistory(db *sql.DB, userID int64) ([]ViewingHistoryResponse, erro
 	rows, err := db.Query(`
 		SELECT 
 			vh.id, vh.content_id, vh.watch_duration, vh.last_position, vh.watched_at, vh.is_completed,
-			c.title, c.thumbnail_url, c.duration
+			c.title, c.duration
 		FROM 
 			ViewingHistories vh
 		JOIN 
@@ -112,10 +112,13 @@ func GetViewingHistory(db *sql.DB, userID int64) ([]ViewingHistoryResponse, erro
 		var history ViewingHistoryResponse
 		if err := rows.Scan(
 			&history.ID, &history.ContentID, &history.WatchDuration, &history.LastPosition,
-			&history.WatchedAt, &history.IsCompleted, &history.Title, &history.ThumbnailURL, &history.Duration,
+			&history.WatchedAt, &history.IsCompleted, &history.Title, &history.Duration,
 		); err != nil {
 			return nil, err
 		}
+
+		// 동적 썸네일 URL 설정
+		history.ThumbnailURL = DynamicThumbnailURL(history.ContentID)
 
 		// 시청 진행률 계산 (퍼센트)
 		if history.Duration > 0 {

@@ -5,9 +5,10 @@ import { useQuery } from '@tanstack/react-query';
 import { ContentListResponse, getAllContents, getAllGenres } from '@/infrastructure/api';
 import { useContentsByGenres } from '@/application/hooks/api/content';
 import { useViewingHistory } from '@/application/hooks/api/content';
+import { useWishlists } from '@/application/hooks/api/wishlist/use_wishlist';
 import Banner from '@/presentation/components/organisms/Banner';
 import ContentRow from '@/presentation/components/organisms/ContentRow';
-import { Image } from 'lucide-react';
+import { Image, Heart } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
@@ -29,7 +30,6 @@ export default function Home() {
   // 모든 콘텐츠 데이터 가져오기
   const {
     data: contentsData,
-    isLoading: isContentsLoading,
   } = useQuery({
     queryKey: ['contents'],
     queryFn: getAllContents,
@@ -38,13 +38,18 @@ export default function Home() {
 
   // 시청 기록 데이터 가져오기
   const {
-    viewingHistory,
     inProgressContents,
     isLoading: isViewingHistoryLoading,
   } = useViewingHistory({
     enabled: mounted && isAuthenticated,
     limit: 6, // 최대 6개까지 표시
   });
+
+  // 찜 목록 데이터 가져오기
+  const {
+    data: wishlistsData,
+    isLoading: isWishlistsLoading,
+  } = useWishlists();
 
   // 장르 데이터 가져오기
   const { data: genresData, isLoading: isGenresLoading } = useQuery({
@@ -80,6 +85,9 @@ export default function Home() {
     progress_percent: item.progress_percent,
   }));
 
+  // 찜 목록 콘텐츠
+  const wishlistContents: ContentListResponse[] = wishlistsData?.data || [];
+
   // 여러 장르의 콘텐츠를 병렬로 가져오기 (장르 데이터가 로드된 후에만)
   const genreQueries = useContentsByGenres(genresList, {
     enabled: mounted && isAuthenticated && !isGenresLoading && genresList.length > 0,
@@ -114,6 +122,15 @@ export default function Home() {
           isLoading={isViewingHistoryLoading}
           emptyIcon={<Image size={48} />}
           emptyMessage="아직 시청한 콘텐츠가 없습니다"
+        />
+
+        {/* 찜 목록 콘텐츠 행 */}
+        <ContentRow
+          title="내가 찜한 콘텐츠"
+          contents={wishlistContents}
+          isLoading={isWishlistsLoading}
+          emptyIcon={<Heart size={48} />}
+          emptyMessage="아직 찜한 콘텐츠가 없습니다"
         />
 
         {/* 장르별 콘텐츠 행 */}

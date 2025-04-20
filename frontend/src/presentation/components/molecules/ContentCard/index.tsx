@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Info, MoreVertical, Plus, ImageIcon } from 'lucide-react';
 import { 
   CardContainer,
@@ -9,6 +9,9 @@ import {
   EmptyCardImage
 } from './styles';
 import { ContentCardProps } from './types';
+import { useToggleWishlist } from '@/application/hooks/api/wishlist/use_wishlist';
+import { useQueryClient } from '@tanstack/react-query';
+import { ApiQueryKeys } from '@/application/hooks/api/constants';
 
 const ContentCard: React.FC<ContentCardProps> = ({ 
   content, 
@@ -16,12 +19,35 @@ const ContentCard: React.FC<ContentCardProps> = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [isWishlisted, setIsWishlisted] = useState(content.is_wishlisted);
   const hasOriginalImage = !!content.thumbnail_url && !imageError;
   const hasFallbackImage = !!fallbackImageUrl;
   
   // @ts-ignore - progress_percent는 콘텐츠 응답에 추가한 커스텀 속성
   const progressPercent = content.progress_percent;
   const hasProgress = typeof progressPercent === 'number' && progressPercent > 0;
+
+  // 찜하기/취소 기능 추가
+  const queryClient = useQueryClient();
+  const { mutate: toggleWishlist, isLoading } = useToggleWishlist(content.id);
+  
+  // 찜하기/취소 핸들러
+  const handleToggleWishlist = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    toggleWishlist(undefined, {
+      onSuccess: (response) => {
+        // 카드 상태 업데이트 (로컬 상태)
+        setIsWishlisted(response.data.is_wishlisted);
+        
+        // 찜 목록 쿼리 무효화
+        queryClient.invalidateQueries({ queryKey: [ApiQueryKeys.WISHLIST, 'list'] });
+        // 전체 콘텐츠 쿼리 무효화 (필요한 경우)
+        queryClient.invalidateQueries({ queryKey: ['contents'] });
+      }
+    });
+  }, [toggleWishlist, queryClient, content.id]);
 
   return (
     <CardContainer 
@@ -91,11 +117,11 @@ const ContentCard: React.FC<ContentCardProps> = ({
             <ControlButton>
               <MoreVertical size={16} />
             </ControlButton>
-            <ControlButton>
-              {content.is_wishlisted ? (
-                <div className="text-sm font-bold">✓</div>
+            <ControlButton onClick={handleToggleWishlist} disabled={isLoading}>
+              {isWishlisted ? (
+                <div className="text-sm font-bold text-red-500">✓</div>
               ) : (
-                <Plus size={16} />
+                <Plus size={16} className="hover:text-red-500" />
               )}
             </ControlButton>
           </CardControls>

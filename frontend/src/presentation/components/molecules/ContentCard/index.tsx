@@ -12,11 +12,13 @@ import { ContentCardProps } from './types';
 import { useToggleWishlist } from '@/application/hooks/api/wishlist/use_wishlist';
 import { useQueryClient } from '@tanstack/react-query';
 import { ApiQueryKeys } from '@/application/hooks/api/constants';
+import { useRouter } from 'next/router';
 
 const ContentCard: React.FC<ContentCardProps> = ({ 
   content, 
   fallbackImageUrl = 'https://via.assets.so/movie.png?id=1&q=95&w=160&h=220&fit=fill'
 }) => {
+  const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(content.is_wishlisted);
@@ -48,6 +50,13 @@ const ContentCard: React.FC<ContentCardProps> = ({
       }
     });
   }, [toggleWishlist, queryClient, content.id]);
+
+  // 콘텐츠 상세 페이지로 이동하는 핸들러
+  const handleInfoClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/content/${content.id}`);
+  }, [router, content.id]);
 
   return (
     <CardContainer 
@@ -111,7 +120,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
             </div>
           </div>
           <CardControls>
-            <ControlButton>
+            <ControlButton onClick={handleInfoClick}>
               <Info size={16} />
             </ControlButton>
             <ControlButton>

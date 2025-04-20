@@ -65,8 +65,8 @@ test.describe("로그인 기능", () => {
     // 로그인 성공 후 메인 페이지로 이동 확인
     await expect(page).toHaveURL("/");
 
-    // 프로필 메뉴 열기 (실제 구현에 맞게 선택자 수정 필요)
-    await page.locator("div.user-profile").click();
+    // 프로필 메뉴 열기
+    await page.locator("[data-profile-section]").click();
 
     // 로그아웃 버튼 클릭
     await page.locator("text=로그아웃").click();

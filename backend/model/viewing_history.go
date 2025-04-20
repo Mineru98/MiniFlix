@@ -97,10 +97,16 @@ func GetViewingHistory(db *sql.DB, userID int64) ([]ViewingHistoryResponse, erro
 		JOIN 
 			Contents c ON vh.content_id = c.id
 		WHERE 
-			vh.user_id = ?
+			vh.user_id = ? AND
+			vh.id IN (
+				SELECT MAX(id) 
+				FROM ViewingHistories 
+				WHERE user_id = ?
+				GROUP BY content_id
+			)
 		ORDER BY 
 			vh.watched_at DESC
-	`, userID)
+	`, userID, userID)
 	if err != nil {
 		return nil, err
 	}

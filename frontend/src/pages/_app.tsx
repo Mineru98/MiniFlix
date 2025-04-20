@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import useAuthStore from '@/application/store/auth';
 import { useRouter } from 'next/router';
 import { QueryProvider, ToastProvider } from '@/providers';
+import Head from 'next/head';
 
 // 클라이언트 사이드에서만 렌더링되도록 dynamic import 사용
 const Header = dynamic(
@@ -58,6 +59,10 @@ export default function App({ Component, pageProps }: AppProps) {
     return (
       <QueryProvider>
         <ToastProvider> 
+          <Head>
+            <title>MiniFlix</title>
+            <link rel="icon" href="/favicon.ico" />
+          </Head>
           <SplashPage isLoading={true} />
         </ToastProvider>
       </QueryProvider>
@@ -72,6 +77,9 @@ export default function App({ Component, pageProps }: AppProps) {
       ) : (
         <React.Fragment>
           {isAuthenticated && <Header className={isWatchPage ? 'hide' : ''} />}
+          <Head>
+            <title>MiniFlix</title>
+          </Head>
           <Component {...pageProps} />
           {isAuthenticated && <NavigationBar className={isWatchPage ? 'hide' : ''} />}
         </React.Fragment>

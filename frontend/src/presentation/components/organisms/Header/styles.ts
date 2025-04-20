@@ -133,14 +133,13 @@ export const ProfileImage = styled.img`
 
 export const ProfileDropdown = styled.div`
   position: absolute;
-  top: 100%;
+  top: calc(100% + 0.5rem);
   right: 0;
   background-color: rgba(0, 0, 0, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 3px;
   min-width: 180px;
   padding: 0.5rem 0;
-  margin-top: 0.5rem;
   z-index: 999;
   visibility: hidden;
   opacity: 0;

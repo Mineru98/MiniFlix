@@ -198,3 +198,125 @@ export const AddProfileNote = styled.p`
   text-align: center;
   line-height: 1.2;
 `;
+
+export const Modal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+export const ModalContent = styled.div`
+  background-color: white;
+  width: 90%;
+  max-width: 450px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+`;
+
+export const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+`;
+
+export const ModalTitle = styled.h3`
+  font-size: 18px;
+  font-weight: 600;
+  color: #000;
+  margin: 0;
+`;
+
+export const ModalCloseButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+export const ModalBody = styled.div`
+  padding: 20px;
+`;
+
+export const FormGroup = styled.div`
+  margin-bottom: 20px;
+`;
+
+export const Label = styled.label`
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8px;
+`;
+
+export const Input = styled.input`
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  border-radius: 4px;
+  font-size: 14px;
+  color: #000;
+
+  &:focus {
+    outline: none;
+    border-color: #e50914;
+  }
+
+  &::placeholder {
+    color: rgba(0, 0, 0, 0.5);
+  }
+`;
+
+export const ErrorMessage = styled.div`
+  color: #e50914;
+  font-size: 14px;
+  margin-bottom: 15px;
+`;
+
+export const ModalFooter = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(128, 128, 128, 0.2);
+`;
+
+export const SubmitButton = styled.button`
+  background-color: #e50914;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:disabled {
+    background-color: rgba(229, 9, 20, 0.5);
+    cursor: not-allowed;
+  }
+`;
+
+export const CancelButton = styled.button`
+  background-color: rgba(128, 128, 128, 0.2);
+  color: #333;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+`;

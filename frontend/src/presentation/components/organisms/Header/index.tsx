@@ -162,7 +162,13 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
             />
           </a>
           <div 
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              cursor: 'pointer',
+              position: 'relative'
+            }}
             onClick={toggleProfileDropdown}
             data-profile-section
           >
@@ -182,7 +188,13 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
             <ProfileDropdown 
               ref={profileDropdownRef}
               className={showProfileDropdown ? 'active' : ''}
-              style={{ backgroundColor: '#fff', color: '#000', border: '1px solid rgba(0, 0, 0, 0.15)' }}
+              style={{ 
+                backgroundColor: '#fff', 
+                color: '#000', 
+                border: '1px solid rgba(0, 0, 0, 0.15)',
+                top: 'calc(100% + 8px)',
+                position: 'absolute'
+              }}
             >
               <DropdownItem onClick={() => router.push('/')}>
                 <User size={16} className="mr-2" />

@@ -6,6 +6,7 @@ import useContentSearchStore from '@/application/store/content-search';
 import useAuthStore from '@/application/store/auth';
 import { searchContents } from '@/infrastructure/api';
 import { useQuery } from '@tanstack/react-query';
+import Image from 'next/image';
 import { 
   HeaderContainer, 
   Logo, 
@@ -38,6 +39,9 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const { searchQuery, setSearchQuery, clearSearchQuery, setIsSearching } = useContentSearchStore();
   const { clearAuth } = useAuthStore();
+  
+  // 계정 페이지 여부 확인
+  const isAccountPage = router.pathname.startsWith('/account');
 
   // 반응형 처리를 위한 윈도우 크기 감지
   useEffect(() => {
@@ -133,6 +137,69 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
     clearSearchQuery();
   };
 
+  // 계정 페이지에 대한 헤더 렌더링
+  if (isAccountPage) {
+    return (
+      <div style={{ 
+        width: '100%', 
+        backgroundColor: '#fff', 
+        borderBottom: '1px solid rgba(128, 128, 128, 0.2)' 
+      }}>
+        <header style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          padding: '0 16px', 
+          height: '56px', 
+          maxWidth: '100%' 
+        }}>
+          <a href="/" style={{ display: 'flex', alignItems: 'center', height: '28px' }}>
+            <Image 
+              src="/images/account/netflix-logo.svg" 
+              alt="Netflix" 
+              width={90} 
+              height={30} 
+            />
+          </a>
+          <div 
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+            onClick={toggleProfileDropdown}
+            data-profile-section
+          >
+            <Image 
+              src="/images/account/profile-main.png" 
+              alt="프로필" 
+              width={32} 
+              height={32} 
+              style={{ borderRadius: '4px' }}
+            />
+            <Image 
+              src="/images/account/down-arrow.svg" 
+              alt="메뉴" 
+              width={20} 
+              height={20} 
+            />
+            <ProfileDropdown 
+              ref={profileDropdownRef}
+              className={showProfileDropdown ? 'active' : ''}
+              style={{ backgroundColor: '#fff', color: '#000', border: '1px solid rgba(0, 0, 0, 0.15)' }}
+            >
+              <DropdownItem onClick={() => router.push('/')}>
+                <User size={16} className="mr-2" />
+                <span>홈</span>
+              </DropdownItem>
+              <DropdownItem onClick={handleSignOut}>
+                <LogOut size={16} className="mr-2" />
+                <span>로그아웃</span>
+              </DropdownItem>
+            </ProfileDropdown>
+          </div>
+        </header>
+      </div>
+    );
+  }
+
+  // 기본 헤더 렌더링
   return (
     <HeaderContainer className={className}>
       <Logo>

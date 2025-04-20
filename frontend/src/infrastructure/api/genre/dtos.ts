@@ -4,10 +4,8 @@ import { ResponseWithMetadata } from "../base_dtos";
 export interface Genre {
   id: number;
   name: string;
-  description?: string;
+  description: string;
 }
 
-// 장르 목록 응답 DTO
-export interface GenreListResponse extends ResponseWithMetadata {
-  data: Genre[];
-}
+// 장르 목록 응답
+export type GenreListResponse = ResponseWithMetadata<Genre[]>;

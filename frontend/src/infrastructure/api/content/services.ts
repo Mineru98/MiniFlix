@@ -8,7 +8,9 @@ import {
   PlaybackPositionRequest,
   StreamingResponseWrapper,
   ViewingHistoryRequest,
+  PagingContentListResponseWrapper,
 } from "./dtos";
+import { PaginationQueryParams } from "../base_dtos";
 
 /**
  * 모든 콘텐츠 목록 조회
@@ -97,26 +99,34 @@ export const updateViewingHistory = async (
 /**
  * 장르별 콘텐츠 조회
  * @param genreId - 장르 ID
+ * @param params - 페이징 파라미터 (선택)
  */
 export const getContentsByGenre = async (
-  genreId: number
-): Promise<ContentListResponseWrapper> => {
-  return await apiRequest<ContentListResponseWrapper>({
+  genreId: number,
+  params?: PaginationQueryParams
+): Promise<PagingContentListResponseWrapper> => {
+  return await apiRequest<PagingContentListResponseWrapper>({
     method: "GET",
     url: `${ApiEndpoints.CONTENT_BY_GENRE}/${genreId}`,
+    params,
   });
 };
 
 /**
  * 콘텐츠 검색
  * @param query - 검색어
+ * @param params - 페이징 파라미터 (선택)
  */
 export const searchContents = async (
-  query: string
-): Promise<ContentListResponseWrapper> => {
-  return await apiRequest<ContentListResponseWrapper>({
+  query: string,
+  params?: PaginationQueryParams
+): Promise<PagingContentListResponseWrapper> => {
+  return await apiRequest<PagingContentListResponseWrapper>({
     method: "GET",
     url: ApiEndpoints.CONTENT_SEARCH,
-    params: { q: query },
+    params: {
+      q: query,
+      ...params,
+    },
   });
 };

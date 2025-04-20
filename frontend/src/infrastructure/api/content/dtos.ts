@@ -1,11 +1,5 @@
-import { ResponseWithMetadata } from "../base_dtos";
-
-// 장르 정보 모델
-export interface Genre {
-  id: number;
-  name: string;
-  description?: string;
-}
+import { ResponseWithMetadata, ResponsePagingWithMetadata } from "../base_dtos";
+import { Genre as GenreType } from "../genre/dtos";
 
 // 콘텐츠 목록 응답 DTO
 export interface ContentListResponse {
@@ -26,7 +20,7 @@ export interface ContentDetailResponse {
   video_url: string;
   duration: number;
   release_year: number;
-  genres: Genre[];
+  genres: GenreType[];
   is_wishlisted: boolean;
   last_position?: number;
 }
@@ -67,6 +61,10 @@ export interface ViewingHistoryRequest {
 export interface ContentListResponseWrapper extends ResponseWithMetadata {
   data: ContentListResponse[];
 }
+
+// 페이징된 콘텐츠 목록 응답
+export type PagingContentListResponseWrapper =
+  ResponsePagingWithMetadata<ContentListResponse>;
 
 // 콘텐츠 상세 응답
 export interface ContentDetailResponseWrapper extends ResponseWithMetadata {

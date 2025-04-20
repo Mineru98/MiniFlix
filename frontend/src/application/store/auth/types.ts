@@ -6,6 +6,7 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  isLoginState: boolean;
   loginForm: {
     email: string;
     password: string;
@@ -24,6 +25,7 @@ export interface AuthActions {
   clearAuth: () => void;
   setLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
+  setLoginState: (isLoginState: boolean) => void;
 
   // 로그인 폼 관리
   setLoginEmail: (email: string) => void;

@@ -8,6 +8,7 @@ const initialState: AuthState = {
   isAuthenticated: false,
   isLoading: false,
   error: null,
+  isLoginState: false,
   loginForm: {
     email: "",
     password: "",
@@ -68,6 +69,8 @@ const useAuthStore = create<AuthStore>((set) => {
     setLoading: (isLoading) => set({ isLoading }),
 
     setError: (error) => set({ error, isLoading: false }),
+
+    setLoginState: (isLoginState) => set({ isLoginState }),
 
     // 로그인 폼 관리
     setLoginEmail: (email) =>

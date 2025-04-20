@@ -140,7 +140,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
     <HeaderContainer className={className}>
       <Logo>
         <Link href="/">
-          <img src="/images/netflix-logo.svg" alt="Netflix" />
+          <img src="/images/netflix-logo.svg" alt="MiniFlix" />
         </Link>
       </Logo>
 
@@ -225,22 +225,22 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
           >
             <DropdownItem>
               <Settings size={16} className="mr-2" />
-              <span>App Settings</span>
+              <span>앱 설정</span>
             </DropdownItem>
             <Link href="/account">
               <DropdownItem>
                 <User size={16} className="mr-2" />
-                <span>Account</span>
+                <span>계정</span>
               </DropdownItem>
             </Link>
             <DropdownItem>
               <HelpCircle size={16} className="mr-2" />
-              <span>Help</span>
+              <span>도움말</span>
             </DropdownItem>
             <DropdownDivider />
             <DropdownItem onClick={handleSignOut}>
               <LogOut size={16} className="mr-2" />
-              <span>Sign Out</span>
+              <span>로그아웃</span>
             </DropdownItem>
           </ProfileDropdown>
         </ProfileSection>

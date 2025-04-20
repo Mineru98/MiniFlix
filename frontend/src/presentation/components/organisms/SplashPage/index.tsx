@@ -9,7 +9,7 @@ const SplashPage: React.FC<SplashPageProps> = ({ isLoading }) => {
       <LogoContainer>
         <Image 
           src="/images/netflix-logo.svg" 
-          alt="Netflix 로고" 
+          alt="MiniFlix 로고" 
           width={200} 
           height={200}
           priority

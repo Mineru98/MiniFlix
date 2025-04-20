@@ -133,7 +133,7 @@ export default function LoginForm() {
         
         <div className="mt-4 flex">
           <span className="text-[rgba(255,255,255,0.7)]">
-            넷플릭스 회원이 아닌가요? 
+            MiniFlix 회원이 아닌가요? 
           </span>
           <Link href="/signup" className="text-white ml-1 font-medium">
             지금 가입하세요.

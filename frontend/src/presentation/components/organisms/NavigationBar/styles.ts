@@ -11,6 +11,10 @@ export const NavContainer = styled.nav`
   background-color: #121212;
   padding: 0.75rem 0;
   z-index: 50;
+
+  @media (min-width: 769px) {
+    display: none;
+  }
 `;
 
 export const NavItem = styled.div`

@@ -5,6 +5,7 @@ import SplashPage from '@/presentation/components/organisms/SplashPage';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import NavigationBar from '@/presentation/components/organisms/NavigationBar';
+import Header from '@/presentation/components/organisms/Header';
 import useAuthStore from '@/application/store/auth';
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -35,6 +36,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <SplashPage isLoading={isLoading} />
       ) : (
         <>
+          {isAuthenticated && <Header />}
           <Component {...pageProps} />
           {isAuthenticated && <NavigationBar />}
         </>

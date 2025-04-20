@@ -4,9 +4,12 @@ import '../styles/globals.css';
 import SplashPage from '@/presentation/components/organisms/SplashPage';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
+import NavigationBar from '@/presentation/components/organisms/NavigationBar';
+import useAuthStore from '@/application/store/auth';
 
 export default function App({ Component, pageProps }: AppProps) {
   const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated } = useAuthStore();
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
@@ -28,8 +31,14 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {isLoading && <SplashPage isLoading={isLoading} />}
-      <Component {...pageProps} />
+      {isLoading ? (
+        <SplashPage isLoading={isLoading} />
+      ) : (
+        <>
+          <Component {...pageProps} />
+          {isAuthenticated && <NavigationBar />}
+        </>
+      )}
       <Toaster position="top-center" />
     </QueryClientProvider>
   );

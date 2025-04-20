@@ -1,9 +1,6 @@
 import type { ResponsePagingWithMetadata } from "@/infrastructure/api/base_dtos";
-import type {
-  InfiniteData,
-  QueryFunctionContext,
-  QueryKey,
-} from "@tanstack/react-query";
+import type { InfiniteData, QueryFunctionContext } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
 
 export type BasePaginatedProps = {
   size: number;
@@ -91,6 +88,14 @@ export type BaseMutationProps<Res, Req> = {
 export type BaseMutationResult<Res, Req> = {
   data?: Res;
   isError: boolean;
-  mutate: (input: Req) => void;
+  isLoading: boolean;
+  error: AxiosError | null;
+  mutate: (
+    input: Req,
+    options?: {
+      onSuccess?: (data: Res) => void;
+      onError?: (error: AxiosError) => void;
+    }
+  ) => void;
   mutateAsync: (input: Req) => Promise<Res>;
 };

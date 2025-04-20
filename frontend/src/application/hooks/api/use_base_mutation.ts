@@ -6,7 +6,7 @@ export function useBaseMutation<Res, Req>(
   props: BaseMutationProps<Res, Req>
 ): BaseMutationResult<Res, Req> {
   const { mutationKey, mutationFn } = props;
-  const { data, isError, mutate, mutateAsync } = useMutation<
+  const { data, isError, mutate, mutateAsync, isPending, error } = useMutation<
     Res,
     AxiosError,
     Req
@@ -18,6 +18,8 @@ export function useBaseMutation<Res, Req>(
   return {
     data,
     isError,
+    isLoading: isPending,
+    error,
     mutate,
     mutateAsync,
   };

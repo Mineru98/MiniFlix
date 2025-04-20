@@ -1,18 +1,18 @@
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { ApiError } from '@/types';
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
+import { ApiError } from "@/types";
 
 // API 기본 설정
 const apiClient = axios.create({
-  baseURL: '/api/v1',
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 // 요청 인터셉터 - 토큰 추가
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -33,9 +33,9 @@ apiClient.interceptors.response.use(
 
     // 401 에러 처리 (인증 만료)
     if (response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login?expired=true';
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login?expired=true";
     }
 
     return Promise.reject(error);
@@ -55,4 +55,4 @@ export const apiRequest = async <T>(config: AxiosRequestConfig): Promise<T> => {
   }
 };
 
-export default apiClient; 
+export default apiClient;

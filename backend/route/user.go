@@ -60,7 +60,10 @@ func handleGetUserProfile(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, user.ToUserResponse())
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data":    user.ToUserResponse(),
+		})
 	}
 }
 
@@ -119,7 +122,10 @@ func handleUpdateUserProfile(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, updatedUser.ToUserResponse())
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data":    updatedUser.ToUserResponse(),
+		})
 	}
 }
 
@@ -154,6 +160,9 @@ func handleGetViewingHistory(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, historyList)
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data":    historyList,
+		})
 	}
 }

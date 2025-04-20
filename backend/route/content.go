@@ -78,7 +78,10 @@ func handleGetContentList(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, contentList)
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data":    contentList,
+		})
 	}
 }
 
@@ -124,7 +127,10 @@ func handleGetContentDetail(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, content)
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data":    content,
+		})
 	}
 }
 
@@ -250,7 +256,10 @@ func handleSearchContents(cfg *config.Config) gin.HandlerFunc {
 			}
 		}
 
-		c.JSON(http.StatusOK, contentList)
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data":    contentList,
+		})
 	}
 }
 
@@ -379,7 +388,10 @@ func handleGetContentsByGenre(cfg *config.Config) gin.HandlerFunc {
 			}
 		}
 
-		c.JSON(http.StatusOK, contentList)
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data":    contentList,
+		})
 	}
 }
 
@@ -426,7 +438,10 @@ func handleStreamContent(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, response)
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data":    response,
+		})
 	}
 }
 
@@ -486,7 +501,12 @@ func handleUpdatePlaybackPosition(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "재생 위치가 업데이트되었습니다"})
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data": gin.H{
+				"message": "재생 위치가 업데이트되었습니다",
+			},
+		})
 	}
 }
 
@@ -546,7 +566,12 @@ func handleSaveFinalPosition(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "최종 재생 위치가 저장되었습니다"})
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data": gin.H{
+				"message": "최종 재생 위치가 저장되었습니다",
+			},
+		})
 	}
 }
 
@@ -603,7 +628,12 @@ func handleUpdateViewingHistory(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "시청 기록이 업데이트되었습니다"})
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data": gin.H{
+				"message": "시청 기록이 업데이트되었습니다",
+			},
+		})
 	}
 }
 
@@ -632,11 +662,15 @@ func handleStreamContentWithMock(cfg *config.Config, mockService interface{}) gi
 		// 스트리밍 URL 조회
 		response, err := contentService.GetStreamingURL(contentID, userID)
 		if err != nil {
+			log.Printf("스트리밍 URL 조회 실패: %v", err)
 			c.JSON(http.StatusNotFound, gin.H{"error": "콘텐츠를 찾을 수 없습니다"})
 			return
 		}
 
-		c.JSON(http.StatusOK, response)
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data":    response,
+		})
 	}
 }
 
@@ -681,7 +715,12 @@ func handleUpdatePlaybackPositionWithMock(cfg *config.Config, mockService interf
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "재생 위치가 업데이트되었습니다"})
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data": gin.H{
+				"message": "재생 위치가 업데이트되었습니다",
+			},
+		})
 	}
 }
 
@@ -726,6 +765,11 @@ func handleSaveFinalPositionWithMock(cfg *config.Config, mockService interface{}
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "최종 재생 위치가 저장되었습니다"})
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data": gin.H{
+				"message": "최종 재생 위치가 저장되었습니다",
+			},
+		})
 	}
 }

@@ -4,9 +4,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"backend/config"
 	"backend/helper"
+
+	"github.com/gin-gonic/gin"
 )
 
 // SetupGenreRoutes 장르 관련 라우트 설정
@@ -60,6 +61,9 @@ func handleGetAllGenres(cfg *config.Config) gin.HandlerFunc {
 			})
 		}
 
-		c.JSON(http.StatusOK, genres)
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data":    genres,
+		})
 	}
-} 
+}

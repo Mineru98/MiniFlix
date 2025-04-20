@@ -54,7 +54,10 @@ func handleGetWishlist(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, wishlist)
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data":    wishlist,
+		})
 	}
 }
 
@@ -108,6 +111,9 @@ func handleToggleWishlist(cfg *config.Config) gin.HandlerFunc {
 			response.Message = "콘텐츠가 찜 목록에서 제거되었습니다"
 		}
 
-		c.JSON(http.StatusOK, response)
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data":    response,
+		})
 	}
 }

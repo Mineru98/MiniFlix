@@ -72,7 +72,10 @@ func handleRegister(cfg *config.Config) gin.HandlerFunc {
 				UpdatedAt: time.Now(),
 				IsActive:  true,
 			}
-			c.JSON(http.StatusCreated, user.ToUserResponse())
+			c.JSON(http.StatusCreated, gin.H{
+				"success": true,
+				"data":    user.ToUserResponse(),
+			})
 			return
 		}
 
@@ -102,7 +105,10 @@ func handleRegister(cfg *config.Config) gin.HandlerFunc {
 		}
 
 		// 응답 반환
-		c.JSON(http.StatusCreated, user.ToUserResponse())
+		c.JSON(http.StatusCreated, gin.H{
+			"success": true,
+			"data":    user.ToUserResponse(),
+		})
 	}
 }
 
@@ -157,8 +163,11 @@ func handleLogin(cfg *config.Config) gin.HandlerFunc {
 				}
 				token := "test-jwt-token"
 				c.JSON(http.StatusOK, gin.H{
-					"token": token,
-					"user":  user.ToUserResponse(),
+					"success": true,
+					"data": gin.H{
+						"token": token,
+						"user":  user.ToUserResponse(),
+					},
 				})
 				return
 			default:
@@ -195,8 +204,11 @@ func handleLogin(cfg *config.Config) gin.HandlerFunc {
 
 		// 응답 반환
 		c.JSON(http.StatusOK, gin.H{
-			"token": token,
-			"user":  user.ToUserResponse(),
+			"success": true,
+			"data": gin.H{
+				"token": token,
+				"user":  user.ToUserResponse(),
+			},
 		})
 	}
 }

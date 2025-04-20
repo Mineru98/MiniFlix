@@ -106,13 +106,17 @@ func TestContentStreaming(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		// 응답 파싱
-		var response model.StreamingResponse
+		var response struct {
+			Success bool                    `json:"success"`
+			Data    model.StreamingResponse `json:"data"`
+		}
 		err := json.Unmarshal(w.Body.Bytes(), &response)
 
 		// 응답 검증
 		assert.NoError(t, err)
-		assert.Equal(t, contentID, response.ContentID)
-		assert.NotEmpty(t, response.StreamingURL)
+		assert.True(t, response.Success)
+		assert.Equal(t, contentID, response.Data.ContentID)
+		assert.NotEmpty(t, response.Data.StreamingURL)
 	})
 
 	// 2. 주기적 재생 위치 업데이트 테스트
@@ -148,11 +152,16 @@ func TestContentStreaming(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		// 응답 확인
-		var response map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &response)
-
-		// 메시지 확인
-		assert.Contains(t, response["message"], "재생 위치가 업데이트되었습니다")
+		var response struct {
+			Success bool `json:"success"`
+			Data    struct {
+				Message string `json:"message"`
+			} `json:"data"`
+		}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
+		assert.True(t, response.Success)
+		assert.Contains(t, response.Data.Message, "재생 위치가 업데이트되었습니다")
 	})
 
 	// 3. 여러 번의 주기적 업데이트 시뮬레이션
@@ -222,11 +231,16 @@ func TestContentStreaming(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		// 응답 확인
-		var response map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &response)
-
-		// 메시지 확인
-		assert.Contains(t, response["message"], "최종 재생 위치가 저장되었습니다")
+		var response struct {
+			Success bool `json:"success"`
+			Data    struct {
+				Message string `json:"message"`
+			} `json:"data"`
+		}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
+		assert.True(t, response.Success)
+		assert.Contains(t, response.Data.Message, "최종 재생 위치가 저장되었습니다")
 	})
 
 	// 5. 비로그인 사용자가 스트리밍 요청 시 실패 테스트
@@ -246,17 +260,17 @@ func TestContentStreaming(t *testing.T) {
 	t.Run("6. 마지막 시청 위치 조회", func(t *testing.T) {
 		// 기존 모의 호출 제거 및 새 모의 서비스 설정
 		mockContentService = new(MockContentService)
+		// 라우터 재설정
+		router = setupTestRouterWithMock(cfg, mockContentService)
 
 		// 모의 응답 설정 (마지막 위치 포함)
 		streamingResp := &model.StreamingResponse{
 			ContentID:    contentID,
 			StreamingURL: "https://example.com/stream/test.mp4",
-			LastPosition: 200, // 이전에 저장했던 위치
+			LastPosition: 200, // 이전에 저장된 위치
 		}
-		mockContentService.On("GetStreamingURL", contentID, userID).Return(streamingResp, nil)
 
-		// 라우터 재설정 (새 모의 서비스 사용)
-		router = setupTestRouterWithMock(cfg, mockContentService)
+		mockContentService.On("GetStreamingURL", contentID, userID).Return(streamingResp, nil)
 
 		// 요청 생성
 		req, _ := http.NewRequest("GET", fmt.Sprintf("/api/contents/%d/stream", contentID), nil)
@@ -269,33 +283,21 @@ func TestContentStreaming(t *testing.T) {
 		// 상태 코드 확인
 		assert.Equal(t, http.StatusOK, w.Code)
 
-		// 응답 로그 출력 (디버깅용)
+		// 응답 본문 출력 (디버깅 용도)
 		t.Logf("응답 본문: %s", w.Body.String())
 
-		// JSON에서 직접 LastPosition 필드 확인
-		var respMap map[string]interface{}
-		err := json.Unmarshal(w.Body.Bytes(), &respMap)
-		assert.NoError(t, err, "JSON 파싱 오류")
+		// 응답 파싱
+		var response struct {
+			Success bool                    `json:"success"`
+			Data    model.StreamingResponse `json:"data"`
+		}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
+		assert.True(t, response.Success)
 
-		// LastPosition이 존재하는지 확인
-		lastPosition, exists := respMap["last_position"]
-		assert.True(t, exists, "응답에 last_position 필드가 없음")
-
-		// float64로 변환된 LastPosition 값
-		lastPositionFloat, ok := lastPosition.(float64)
-		assert.True(t, ok, "last_position을 숫자로 변환할 수 없음")
-
-		// 예상값과 실제값 비교
-		t.Logf("예상 LastPosition: %d, 실제 LastPosition: %.0f", streamingResp.LastPosition, lastPositionFloat)
-		assert.Equal(t, float64(streamingResp.LastPosition), lastPositionFloat, "LastPosition 불일치")
-
-		// 표준 모델로 파싱
-		var response model.StreamingResponse
-		json.Unmarshal(w.Body.Bytes(), &response)
-
-		// 응답 모델 필드 검증
-		assert.Equal(t, contentID, response.ContentID, "ContentID 불일치")
-		assert.Equal(t, streamingResp.StreamingURL, response.StreamingURL, "StreamingURL 불일치")
-		assert.Equal(t, streamingResp.LastPosition, response.LastPosition, "LastPosition 불일치")
+		// 스트리밍 URL 및 위치 정보 검증
+		assert.Equal(t, contentID, response.Data.ContentID, "ContentID 불일치")
+		assert.Equal(t, "https://example.com/stream/test.mp4", response.Data.StreamingURL, "StreamingURL 불일치")
+		assert.Equal(t, 200, response.Data.LastPosition, "LastPosition 불일치")
 	})
 }

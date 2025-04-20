@@ -15,7 +15,7 @@ type MockUserService struct {
 	mock.Mock
 }
 
-func (m *MockUserService) Register(req *model.UserRegisterRequest) (*model.User, error) {
+func (m *MockUserService) Register(req *model.RegisterRequest) (*model.User, error) {
 	args := m.Called(req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -28,7 +28,7 @@ func (m *MockUserService) CheckEmailExists(email string) (bool, error) {
 	return args.Bool(0), args.Error(1)
 }
 
-func (m *MockUserService) ValidateLogin(req *model.UserLoginRequest) (*model.User, error) {
+func (m *MockUserService) ValidateLogin(req *model.LoginRequest) (*model.User, error) {
 	args := m.Called(req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -52,7 +52,7 @@ func (m *MockUserService) GetUserByID(id int64) (*model.User, error) {
 	return args.Get(0).(*model.User), args.Error(1)
 }
 
-func (m *MockUserService) UpdateUserInfo(id int64, req *model.UserUpdateRequest) error {
+func (m *MockUserService) UpdateUserInfo(id int64, req *model.UpdateProfileRequest) error {
 	args := m.Called(id, req)
 	return args.Error(0)
 }

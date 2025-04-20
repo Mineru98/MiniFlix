@@ -47,14 +47,14 @@ func TestRegister(t *testing.T) {
 	// 테스트 케이스
 	testCases := []struct {
 		name           string
-		requestBody    model.UserRegisterRequest
+		requestBody    model.RegisterRequest
 		emailExists    bool
 		expectStatus   int
 		expectResponse interface{}
 	}{
 		{
 			name: "유효한 회원가입",
-			requestBody: model.UserRegisterRequest{
+			requestBody: model.RegisterRequest{
 				Email:    "test@example.com",
 				Password: "password123",
 				Name:     "테스트 사용자",
@@ -64,7 +64,7 @@ func TestRegister(t *testing.T) {
 		},
 		{
 			name: "이미 존재하는 이메일",
-			requestBody: model.UserRegisterRequest{
+			requestBody: model.RegisterRequest{
 				Email:    "existing@example.com",
 				Password: "password123",
 				Name:     "기존 사용자",
@@ -74,7 +74,7 @@ func TestRegister(t *testing.T) {
 		},
 		{
 			name: "유효하지 않은 이메일",
-			requestBody: model.UserRegisterRequest{
+			requestBody: model.RegisterRequest{
 				Email:    "invalid-email",
 				Password: "password123",
 				Name:     "유효하지 않은 이메일 사용자",
@@ -84,7 +84,7 @@ func TestRegister(t *testing.T) {
 		},
 		{
 			name: "너무 짧은 비밀번호",
-			requestBody: model.UserRegisterRequest{
+			requestBody: model.RegisterRequest{
 				Email:    "short@example.com",
 				Password: "12345",
 				Name:     "짧은 비밀번호 사용자",
@@ -112,7 +112,7 @@ func TestRegister(t *testing.T) {
 
 				// 모의 핸들러 설정
 				authRoutes.POST("/register", func(c *gin.Context) {
-					var req model.UserRegisterRequest
+					var req model.RegisterRequest
 					if err := c.ShouldBindJSON(&req); err != nil {
 						c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 요청 데이터"})
 						return
@@ -141,12 +141,20 @@ func TestRegister(t *testing.T) {
 
 			// 상태 코드에 따른 추가 검증
 			if w.Code == http.StatusCreated {
-				var response model.UserResponse
+				// 응답 구조 확인
+				var response struct {
+					Success bool               `json:"success"`
+					Data    model.UserResponse `json:"data"`
+				}
+
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				assert.NoError(t, err)
-				assert.Equal(t, tc.requestBody.Email, response.Email)
-				assert.Equal(t, tc.requestBody.Name, response.Name)
-				assert.True(t, response.IsActive)
+				assert.True(t, response.Success)
+
+				// 사용자 정보 확인
+				assert.Equal(t, tc.requestBody.Email, response.Data.Email)
+				assert.Equal(t, tc.requestBody.Name, response.Data.Name)
+				assert.True(t, response.Data.IsActive)
 			} else if w.Code == http.StatusConflict {
 				var response map[string]string
 				err := json.Unmarshal(w.Body.Bytes(), &response)
@@ -167,7 +175,7 @@ func TestLogin(t *testing.T) {
 	// 테스트 케이스
 	testCases := []struct {
 		name         string
-		requestBody  model.UserLoginRequest
+		requestBody  model.LoginRequest
 		expectStatus int
 		userExists   bool
 		isActive     bool
@@ -175,7 +183,7 @@ func TestLogin(t *testing.T) {
 	}{
 		{
 			name: "유효한 로그인",
-			requestBody: model.UserLoginRequest{
+			requestBody: model.LoginRequest{
 				Email:    "user@example.com",
 				Password: "password123",
 			},
@@ -186,7 +194,7 @@ func TestLogin(t *testing.T) {
 		},
 		{
 			name: "존재하지 않는 사용자",
-			requestBody: model.UserLoginRequest{
+			requestBody: model.LoginRequest{
 				Email:    "nonexistent@example.com",
 				Password: "password123",
 			},
@@ -197,7 +205,7 @@ func TestLogin(t *testing.T) {
 		},
 		{
 			name: "비활성화된 계정",
-			requestBody: model.UserLoginRequest{
+			requestBody: model.LoginRequest{
 				Email:    "inactive@example.com",
 				Password: "password123",
 			},
@@ -208,7 +216,7 @@ func TestLogin(t *testing.T) {
 		},
 		{
 			name: "잘못된 비밀번호",
-			requestBody: model.UserLoginRequest{
+			requestBody: model.LoginRequest{
 				Email:    "user@example.com",
 				Password: "wrongpassword",
 			},
@@ -219,7 +227,7 @@ func TestLogin(t *testing.T) {
 		},
 		{
 			name: "유효하지 않은 이메일 형식",
-			requestBody: model.UserLoginRequest{
+			requestBody: model.LoginRequest{
 				Email:    "invalid-email",
 				Password: "password123",
 			},
@@ -258,27 +266,27 @@ func TestLogin(t *testing.T) {
 
 			// 상태 코드에 따른 추가 검증
 			if w.Code == http.StatusOK {
-				var response map[string]interface{}
+				// 응답 구조 확인
+				var response struct {
+					Success bool `json:"success"`
+					Data    struct {
+						Token string             `json:"token"`
+						User  model.UserResponse `json:"user"`
+					} `json:"data"`
+				}
+
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				assert.NoError(t, err)
+				assert.True(t, response.Success)
 
-				// 토큰 검증
-				token, exists := response["token"]
-				assert.True(t, exists)
-				assert.NotEmpty(t, token)
+				// 토큰 확인
+				assert.NotEmpty(t, response.Data.Token)
 
-				// 사용자 정보 검증
-				userInfo, exists := response["user"]
-				assert.True(t, exists)
-				assert.NotNil(t, userInfo)
-
-				// 사용자 정보 필드 검증
-				user, ok := userInfo.(map[string]interface{})
-				assert.True(t, ok)
-				assert.Equal(t, tc.requestBody.Email, user["email"])
-				assert.NotEmpty(t, user["name"])
-				assert.NotEmpty(t, user["id"])
-				assert.True(t, user["is_active"].(bool))
+				// 사용자 정보 확인
+				assert.Equal(t, tc.requestBody.Email, response.Data.User.Email)
+				assert.NotEmpty(t, response.Data.User.Name)
+				assert.NotEmpty(t, response.Data.User.ID)
+				assert.True(t, response.Data.User.IsActive)
 			} else if w.Code == http.StatusUnauthorized {
 				var response map[string]string
 				err := json.Unmarshal(w.Body.Bytes(), &response)

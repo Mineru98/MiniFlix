@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
 import useAuthStore from '@/application/store/auth';
+import { useLogin } from '@/application/hooks/api/auth';
+import { toast } from 'react-hot-toast';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -10,7 +12,8 @@ export default function LoginPage() {
   const [rememberLogin, setRememberLogin] = useState(false);
   const router = useRouter();
   
-  const { isAuthenticated, isLoginState, setLoginState } = useAuthStore();
+  const { isAuthenticated, isLoginState, setLoginState, setAuth } = useAuthStore();
+  const { mutate: loginMutate, isLoading } = useLogin();
   
   // 마운트 시 로그인 상태 false로 설정
   useEffect(() => {
@@ -24,12 +27,29 @@ export default function LoginPage() {
   
   const handleLogin = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // 실제 로그인 로직은 구현되지 않았습니다.
-    console.log('Login attempt with:', { email, password, rememberLogin });
+    
+    // 로그인 API 호출
+    loginMutate(
+      { email, password },
+      {
+        onSuccess: (data) => {
+          setAuth(data.data.user, data.data.token);
+          if (rememberLogin) {
+            // 로그인 정보 저장 로직은 useAuthStore에서 처리
+          }
+          toast.success('로그인에 성공했습니다');
+          router.push('/');
+        },
+        onError: (error) => {
+          toast.error('로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
+          console.error('Login error:', error);
+        }
+      }
+    );
   };
   
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white" data-testid="login-page">
       <div className="flex flex-col">
         <div className="flex justify-center items-center p-6">
           <Link href="/" className="flex items-center">
@@ -55,12 +75,13 @@ export default function LoginPage() {
                     id="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-[rgba(22,22,22,0.7)] border border-[rgba(128,128,128,0.7)] text-white py-4 px-3 rounded"
+                    className="w-full bg-[rgba(22,22,22,0.7)] border border-[rgba(128,128,128,0.7)] text-white py-4 px-3 rounded pt-6"
                     required
+                    data-testid="email-input"
                   />
                   <label 
                     htmlFor="email" 
-                    className={`absolute left-3 top-4 text-[rgba(255,255,255,0.7)] transition-all ${email ? 'text-xs -top-2 bg-black px-1' : ''}`}
+                    className={`absolute left-3 ${email ? 'top-1 text-xs' : 'top-4'} text-[rgba(255,255,255,0.7)] transition-all z-10`}
                   >
                     이메일
                   </label>
@@ -74,12 +95,13 @@ export default function LoginPage() {
                     id="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[rgba(22,22,22,0.7)] border border-[rgba(128,128,128,0.7)] text-white py-4 px-3 rounded"
+                    className="w-full bg-[rgba(22,22,22,0.7)] border border-[rgba(128,128,128,0.7)] text-white py-4 px-3 rounded pt-6"
                     required
+                    data-testid="password-input"
                   />
                   <label 
                     htmlFor="password" 
-                    className={`absolute left-3 top-4 text-[rgba(255,255,255,0.7)] transition-all ${password ? 'text-xs -top-2 bg-black px-1' : ''}`}
+                    className={`absolute left-3 ${password ? 'top-1 text-xs' : 'top-4'} text-[rgba(255,255,255,0.7)] transition-all z-10`}
                   >
                     비밀번호
                   </label>
@@ -89,8 +111,10 @@ export default function LoginPage() {
               <button
                 type="submit"
                 className="w-full bg-[#E50914] text-white py-3 px-4 rounded font-medium mt-4"
+                disabled={isLoading}
+                data-testid="login-button"
               >
-                로그인
+                {isLoading ? '로그인 중...' : '로그인'}
               </button>
               
               <div className="flex justify-center mt-4">
@@ -120,6 +144,7 @@ export default function LoginPage() {
                     checked={rememberLogin}
                     onChange={(e) => setRememberLogin(e.target.checked)}
                     className="hidden"
+                    data-testid="remember-checkbox"
                   />
                   <div 
                     className={`w-4 h-4 border rounded flex items-center justify-center ${rememberLogin ? 'bg-white' : 'border-white'}`}

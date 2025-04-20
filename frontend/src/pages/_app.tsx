@@ -3,6 +3,7 @@ import type { AppProps } from 'next/app';
 import '../styles/globals.css';
 import SplashPage from '@/presentation/components/organisms/SplashPage';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'react-hot-toast';
 
 export default function App({ Component, pageProps }: AppProps) {
   const [isLoading, setIsLoading] = useState(true);
@@ -29,6 +30,7 @@ export default function App({ Component, pageProps }: AppProps) {
     <QueryClientProvider client={queryClient}>
       {isLoading && <SplashPage isLoading={isLoading} />}
       <Component {...pageProps} />
+      <Toaster position="top-center" />
     </QueryClientProvider>
   );
 } 

@@ -11,7 +11,9 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
-    "test:login": "playwright test login.spec.ts"
+    "test:login": "playwright test auth.login.spec.ts",
+    "test:signup": "playwright test auth.signup.spec.ts",
+    "test:install-browsers": "playwright install"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.74.4",
@@ -36,7 +38,7 @@
     "zustand": "^4.4.3"
   },
   "devDependencies": {
-    "@playwright/test": "^1.39.0",
+    "@playwright/test": "^1.52.0",
     "@types/node": "^20.8.6",
     "@types/qs": "^6.9.18",
     "@types/react": "^18.2.28",

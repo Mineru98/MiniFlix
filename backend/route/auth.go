@@ -40,7 +40,9 @@ func handleRegister(cfg *config.Config) gin.HandlerFunc {
 		// 사용자 등록 요청 파싱
 		var registerRequest model.RegisterRequest
 		if err := c.ShouldBindJSON(&registerRequest); err != nil {
-			log.Printf("회원가입 요청 파싱 실패: %v", err)
+			if cfg.Environment != "test" {
+				log.Printf("회원가입 요청 파싱 실패: %v", err)
+			}
 			c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 회원가입 요청"})
 			return
 		}
@@ -130,7 +132,9 @@ func handleLogin(cfg *config.Config) gin.HandlerFunc {
 		// 로그인 요청 파싱
 		var loginRequest model.LoginRequest
 		if err := c.ShouldBindJSON(&loginRequest); err != nil {
-			log.Printf("로그인 요청 파싱 실패: %v", err)
+			if cfg.Environment != "test" {
+				log.Printf("로그인 요청 파싱 실패: %v", err)
+			}
 			c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 로그인 요청"})
 			return
 		}

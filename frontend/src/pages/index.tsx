@@ -1,5 +1,4 @@
-// src/pages/index.tsx
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import useAuthStore from '@/application/store/auth';
 import { useQuery } from '@tanstack/react-query';

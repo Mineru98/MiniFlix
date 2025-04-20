@@ -23,10 +23,10 @@ const ContentRow: React.FC<ContentRowProps> = ({
       <ContentContainer>
         {isLoading ? (
           <LoadingContainer>
-            <div className="w-32 h-48 bg-gray-800 animate-pulse rounded"></div>
-            <div className="w-32 h-48 bg-gray-800 animate-pulse rounded"></div>
-            <div className="w-32 h-48 bg-gray-800 animate-pulse rounded"></div>
-            <div className="w-32 h-48 bg-gray-800 animate-pulse rounded"></div>
+            <div className="w-40 h-60 bg-gray-800 animate-pulse rounded aspect-[2/3]"></div>
+            <div className="w-40 h-60 bg-gray-800 animate-pulse rounded aspect-[2/3]"></div>
+            <div className="w-40 h-60 bg-gray-800 animate-pulse rounded aspect-[2/3]"></div>
+            <div className="w-40 h-60 bg-gray-800 animate-pulse rounded aspect-[2/3]"></div>
           </LoadingContainer>
         ) : contents.length > 0 ? (
           contents.map((content) => (

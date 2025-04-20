@@ -23,7 +23,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const router = useRouter();
   const playerRef = useRef<ReactPlayer>(null);
   const [showControls, setShowControls] = React.useState(false);
+  const [controlsVisible, setControlsVisible] = React.useState(false);
   const [isSeeking, setIsSeeking] = React.useState(false);
+  const controlsTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Player 상태
   const {
@@ -80,16 +82,69 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     };
   }, [contentId, onSaveFinalPosition, onUpdateHistory]);
 
+  // showControls 상태가 변경될 때 애니메이션 적용
+  useEffect(() => {
+    if (showControls) {
+      setControlsVisible(true);
+    } else {
+      // 사라지는 애니메이션을 위해 즉시 사라지지 않도록 지연
+      const timer = setTimeout(() => {
+        setControlsVisible(false);
+      }, 300); // 애니메이션 지속 시간과 동일하게 설정
+      return () => clearTimeout(timer);
+    }
+  }, [showControls]);
+
+  // 시킹 상태가 변경될 때 컨트롤 표시 제어
+  useEffect(() => {
+    if (isSeeking) {
+      // 시킹 중에는 컨트롤 표시 유지 및 타이머 제거
+      setShowControls(true);
+      if (controlsTimerRef.current) {
+        clearTimeout(controlsTimerRef.current);
+        controlsTimerRef.current = null;
+      }
+    } else if (showControls) {
+      // 시킹이 끝나면 타이머 재설정
+      startControlsTimer();
+    }
+  }, [isSeeking]);
+
+  // 컴포넌트 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (controlsTimerRef.current) {
+        clearTimeout(controlsTimerRef.current);
+      }
+    };
+  }, []);
+
+  // 컨트롤 타이머 시작 함수
+  const startControlsTimer = useCallback(() => {
+    // 기존 타이머 정리
+    if (controlsTimerRef.current) {
+      clearTimeout(controlsTimerRef.current);
+    }
+    
+    // 시킹 중이 아닐 때만 타이머 설정
+    if (!isSeeking) {
+      controlsTimerRef.current = setTimeout(() => {
+        setShowControls(false);
+        controlsTimerRef.current = null;
+      }, 3000);
+    }
+  }, [isSeeking]);
+
   // 컨트롤 표시 토글
   const handleMouseMove = useCallback(() => {
-    setShowControls(true);
-    // 3초 후 컨트롤 숨김
-    const timer = setTimeout(() => {
-      setShowControls(false);
-    }, 3000);
+    // 컨트롤이 보이지 않는 상태에서만 표시
+    if (!showControls) {
+      setShowControls(true);
+    }
     
-    return () => clearTimeout(timer);
-  }, []);
+    // 타이머 재설정
+    startControlsTimer();
+  }, [showControls, startControlsTimer]);
 
   // 재생/일시정지 토글
   const togglePlay = useCallback(() => {
@@ -141,9 +196,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           style={{ backgroundColor: '#000000' }}
         />
         
-        {showControls && (
-          <>
-            <BackButton onClick={handleBack}>
+        {controlsVisible && (
+          <React.Fragment>
+            <BackButton 
+              onClick={handleBack}
+              isVisible={showControls}
+            >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
               </svg>
@@ -158,8 +216,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               isPlaying={isPlaying}
               playbackRate={playbackRate}
               togglePlay={togglePlay}
+              isVisible={showControls}
             />
-          </>
+          </React.Fragment>
         )}
       </VideoWrapper>
     </VideoPlayerContainer>

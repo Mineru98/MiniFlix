@@ -62,7 +62,7 @@ const WatchPage: React.FC = () => {
   const lastPosition = streamingData.data.last_position || 0;
 
   return (
-    <>
+    <React.Fragment>
       <Head>
         <title>시청 중 - MiniFlix</title>
       </Head>
@@ -75,7 +75,7 @@ const WatchPage: React.FC = () => {
         onSaveFinalPosition={saveFinal}
         onUpdateHistory={updateHistory}
       />
-    </>
+    </React.Fragment>
   );
 };
 

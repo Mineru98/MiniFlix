@@ -70,7 +70,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
       onClick={handlePlayClick}
     >
       {hasOriginalImage ? (
-        <>
+        <React.Fragment>
           <CardImage
             style={{ backgroundImage: `url(${content.thumbnail_url})` }}
             onError={() => setImageError(true)}
@@ -83,9 +83,9 @@ const ContentCard: React.FC<ContentCardProps> = ({
               />
             </div>
           )}
-        </>
+        </React.Fragment>
       ) : hasFallbackImage ? (
-        <>
+        <React.Fragment>
           <CardImage
             style={{ backgroundImage: `url(${fallbackImageUrl})` }}
           />
@@ -97,9 +97,9 @@ const ContentCard: React.FC<ContentCardProps> = ({
               />
             </div>
           )}
-        </>
+        </React.Fragment>
       ) : (
-        <>
+        <React.Fragment>
           <EmptyCardImage>
             <ImageIcon size={32} className="text-gray-500" />
           </EmptyCardImage>
@@ -111,7 +111,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
               />
             </div>
           )}
-        </>
+        </React.Fragment>
       )}
       
       {isHovered && (
@@ -128,9 +128,6 @@ const ContentCard: React.FC<ContentCardProps> = ({
           <CardControls>
             <ControlButton onClick={handleInfoClick}>
               <Info size={16} />
-            </ControlButton>
-            <ControlButton>
-              <MoreVertical size={16} />
             </ControlButton>
             <ControlButton onClick={handleToggleWishlist} disabled={isLoading}>
               {isWishlisted ? (

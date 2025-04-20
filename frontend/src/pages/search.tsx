@@ -142,7 +142,7 @@ const SearchPage = () => {
         />
         
         {currentQuery ? (
-          <>
+          <React.Fragment>
             <ContentRow 
               title={`"${currentQuery}" 검색 결과 (${totalResults})`}
               contents={searchResultsContent}
@@ -151,7 +151,7 @@ const SearchPage = () => {
             />
             
             {/* 페이지네이션 UI가 필요하다면 여기에 추가 */}
-          </>
+          </React.Fragment>
         ) : (
           <div className="flex flex-col items-center justify-center py-12 text-gray-400">
             <p>검색어를 입력하세요</p>

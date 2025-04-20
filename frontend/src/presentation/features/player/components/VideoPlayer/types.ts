@@ -32,4 +32,5 @@ export interface VideoControlsProps {
   isPlaying: boolean;
   playbackRate: number;
   togglePlay: () => void;
+  isVisible: boolean;
 }

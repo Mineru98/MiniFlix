@@ -17,7 +17,7 @@ const ContentDetailPage: NextPage<ContentDetailPageProps> = ({ contentId }) => {
   }
 
   return (
-    <>
+    <React.Fragment>
       <Head>
         <title>콘텐츠 상세 | MiniFlix</title>
         <meta name="description" content="콘텐츠 상세 정보를 확인하세요" />
@@ -25,7 +25,7 @@ const ContentDetailPage: NextPage<ContentDetailPageProps> = ({ contentId }) => {
       <main className="flex min-h-screen flex-col bg-black text-white">
         <ContentDetail contentId={contentId} />
       </main>
-    </>
+    </React.Fragment>
   );
 };
 

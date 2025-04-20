@@ -19,7 +19,8 @@ const VideoControls: React.FC<VideoControlsProps> = ({
   duration,
   isPlaying,
   playbackRate,
-  togglePlay
+  togglePlay,
+  isVisible
 }) => {
   const progressRef = useRef<HTMLDivElement>(null);
   const { setPlaybackRate } = usePlayerStore();
@@ -55,7 +56,7 @@ const VideoControls: React.FC<VideoControlsProps> = ({
   }, []);
 
   return (
-    <ControlsOverlay>
+    <ControlsOverlay isVisible={isVisible}>
       <ProgressBar
         onClick={handleProgressClick}
         ref={progressRef}

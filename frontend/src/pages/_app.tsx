@@ -70,11 +70,11 @@ export default function App({ Component, pageProps }: AppProps) {
       {shouldShowSplash() ? (
         <SplashPage isLoading={isLoading} />
       ) : (
-        <>
+        <React.Fragment>
           {isAuthenticated && <Header className={isWatchPage ? 'hide' : ''} />}
           <Component {...pageProps} />
           {isAuthenticated && <NavigationBar className={isWatchPage ? 'hide' : ''} />}
-        </>
+        </React.Fragment>
       )}
     </ToastProvider>
     </QueryProvider>

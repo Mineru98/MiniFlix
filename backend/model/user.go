@@ -29,24 +29,31 @@ type UserResponse struct {
 	IsActive  bool      `json:"is_active"`  // 계정 활성화 상태
 }
 
-// UserLoginRequest 로그인 요청 모델
+// LoginRequest 로그인 요청 모델
 // @Description 로그인 시 클라이언트에서 전송하는 데이터 모델
-type UserLoginRequest struct {
+type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"` // 사용자 이메일
 	Password string `json:"password" binding:"required"`    // 사용자 비밀번호
 }
 
-// UserRegisterRequest 회원가입 요청 모델
+// LoginResponse 로그인 응답 모델
+// @Description 로그인 성공 시 반환되는 데이터 모델
+type LoginResponse struct {
+	Token string       `json:"token"` // JWT 토큰
+	User  UserResponse `json:"user"`  // 사용자 정보
+}
+
+// RegisterRequest 회원가입 요청 모델
 // @Description 회원가입 시 클라이언트에서 전송하는 데이터 모델
-type UserRegisterRequest struct {
+type RegisterRequest struct {
 	Email    string `json:"email" binding:"required,email"`    // 사용자 이메일
 	Password string `json:"password" binding:"required,min=6"` // 사용자 비밀번호 (최소 6자)
 	Name     string `json:"name" binding:"required"`           // 사용자 이름
 }
 
-// UserUpdateRequest 사용자 정보 업데이트 요청 모델
+// UpdateProfileRequest 사용자 정보 업데이트 요청 모델
 // @Description 사용자 정보 업데이트 시 클라이언트에서 전송하는 데이터 모델
-type UserUpdateRequest struct {
+type UpdateProfileRequest struct {
 	Name            string `json:"name"`                                // 변경할 사용자 이름
 	CurrentPassword string `json:"current_password" binding:"required"` // 현재 비밀번호
 	NewPassword     string `json:"new_password"`                        // 새 비밀번호 (변경하지 않을 경우 빈 문자열)
@@ -76,7 +83,7 @@ func CheckPasswordHash(password, hash string) bool {
 }
 
 // CreateUser 새 사용자 생성
-func CreateUser(db *sql.DB, user *UserRegisterRequest) (*User, error) {
+func CreateUser(db *sql.DB, user *RegisterRequest) (*User, error) {
 	// 비밀번호 해시
 	hashedPassword, err := HashPassword(user.Password)
 	if err != nil {
@@ -144,7 +151,7 @@ func GetUserByID(db *sql.DB, id int64) (*User, error) {
 }
 
 // UpdateUser 사용자 정보 업데이트
-func UpdateUser(db *sql.DB, id int64, update *UserUpdateRequest) error {
+func UpdateUser(db *sql.DB, id int64, update *UpdateProfileRequest) error {
 	// 현재 시간
 	now := time.Now()
 

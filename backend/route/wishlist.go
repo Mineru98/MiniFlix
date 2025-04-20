@@ -24,14 +24,14 @@ func SetupWishlistRoutes(router *gin.RouterGroup, cfg *config.Config) {
 }
 
 // @Summary 찜 목록 조회
-// @Description 로그인한 사용자의 찜 목록 조회
+// @Description 사용자의 찜 목록 조회 (인증 필요)
 // @Tags 찜 목록
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "Bearer JWT 토큰"
-// @Success 200 {array} model.ContentListResponse "찜 목록"
-// @Failure 401 {object} map[string]interface{} "인증 실패"
-// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Success 200 {object} model.ArrayResponse{data=[]model.ContentListResponse} "찜 목록"
+// @Failure 401 {object} model.ErrorResponse "인증 필요"
+// @Failure 500 {object} model.ErrorResponse "서버 오류"
 // @Router /wishlists [get]
 func handleGetWishlist(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -61,17 +61,17 @@ func handleGetWishlist(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
-// @Summary 찜하기/취소
-// @Description 콘텐츠 찜하기 또는 찜 취소
+// @Summary 찜 상태 토글
+// @Description 콘텐츠 찜 상태 추가/제거 (인증 필요)
 // @Tags 찜 목록
 // @Accept json
 // @Produce json
 // @Param contentId path int true "콘텐츠 ID"
 // @Param Authorization header string true "Bearer JWT 토큰"
-// @Success 200 {object} model.WishlistToggleResponse "찜 상태"
-// @Failure 400 {object} map[string]interface{} "요청 데이터 오류"
-// @Failure 401 {object} map[string]interface{} "인증 실패"
-// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Success 200 {object} model.ApiResponse{data=model.WishlistToggleResponse} "찜 상태"
+// @Failure 400 {object} model.ErrorResponse "유효하지 않은 콘텐츠 ID"
+// @Failure 401 {object} model.ErrorResponse "인증 필요"
+// @Failure 500 {object} model.ErrorResponse "서버 오류"
 // @Router /wishlists/{contentId} [post]
 func handleToggleWishlist(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {

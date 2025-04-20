@@ -51,8 +51,8 @@ func SetupContentRoutesWithMockService(router *gin.RouterGroup, cfg *config.Conf
 // @Accept json
 // @Produce json
 // @Param Authorization header string false "Bearer JWT 토큰"
-// @Success 200 {array} model.ContentListResponse "콘텐츠 목록"
-// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Success 200 {object} model.ArrayResponse{data=[]model.ContentListResponse} "콘텐츠 목록"
+// @Failure 500 {object} model.ErrorResponse "서버 오류"
 // @Router /contents [get]
 func handleGetContentList(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -92,9 +92,9 @@ func handleGetContentList(cfg *config.Config) gin.HandlerFunc {
 // @Produce json
 // @Param id path int true "콘텐츠 ID"
 // @Param Authorization header string false "Bearer JWT 토큰"
-// @Success 200 {object} model.ContentDetailResponse "콘텐츠 상세 정보"
-// @Failure 404 {object} map[string]interface{} "콘텐츠 없음"
-// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Success 200 {object} model.ApiResponse{data=model.ContentDetailResponse} "콘텐츠 상세 정보"
+// @Failure 404 {object} model.ErrorResponse "콘텐츠 없음"
+// @Failure 500 {object} model.ErrorResponse "서버 오류"
 // @Router /contents/{id} [get]
 func handleGetContentDetail(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -141,8 +141,8 @@ func handleGetContentDetail(cfg *config.Config) gin.HandlerFunc {
 // @Produce json
 // @Param q query string true "검색어"
 // @Param Authorization header string false "Bearer JWT 토큰"
-// @Success 200 {array} model.ContentListResponse "검색 결과"
-// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Success 200 {object} model.ArrayResponse{data=[]model.ContentListResponse} "검색 결과"
+// @Failure 500 {object} model.ErrorResponse "서버 오류"
 // @Router /contents/search [get]
 func handleSearchContents(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -270,9 +270,9 @@ func handleSearchContents(cfg *config.Config) gin.HandlerFunc {
 // @Produce json
 // @Param genreId path int true "장르 ID"
 // @Param Authorization header string false "Bearer JWT 토큰"
-// @Success 200 {array} model.ContentListResponse "장르별 필터링된 콘텐츠 목록"
-// @Failure 400 {object} map[string]interface{} "잘못된 장르 ID"
-// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Success 200 {object} model.ArrayResponse{data=[]model.ContentListResponse} "장르별 필터링된 콘텐츠 목록"
+// @Failure 400 {object} model.ErrorResponse "잘못된 장르 ID"
+// @Failure 500 {object} model.ErrorResponse "서버 오류"
 // @Router /contents/genre/{genreId} [get]
 func handleGetContentsByGenre(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -395,17 +395,18 @@ func handleGetContentsByGenre(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
-// @Summary 콘텐츠 스트리밍 요청
-// @Description 콘텐츠 스트리밍을 위한 정보 조회 (인증 필요)
+// @Summary 콘텐츠 스트리밍
+// @Description 특정 콘텐츠의 스트리밍 URL 조회 (인증 필요)
 // @Tags 콘텐츠
 // @Accept json
 // @Produce json
 // @Param id path int true "콘텐츠 ID"
 // @Param Authorization header string true "Bearer JWT 토큰"
-// @Success 200 {object} model.StreamingResponse "스트리밍 정보"
-// @Failure 401 {object} map[string]interface{} "인증 실패"
-// @Failure 404 {object} map[string]interface{} "콘텐츠 없음"
-// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Success 200 {object} model.ApiResponse{data=model.StreamingResponse} "스트리밍 정보"
+// @Failure 400 {object} model.ErrorResponse "유효하지 않은 콘텐츠 ID"
+// @Failure 401 {object} model.ErrorResponse "인증 필요"
+// @Failure 404 {object} model.ErrorResponse "콘텐츠 없음"
+// @Failure 500 {object} model.ErrorResponse "서버 오류"
 // @Router /contents/{id}/stream [get]
 func handleStreamContent(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -446,17 +447,17 @@ func handleStreamContent(cfg *config.Config) gin.HandlerFunc {
 }
 
 // @Summary 재생 위치 업데이트
-// @Description 콘텐츠 재생 중 주기적으로 위치 업데이트 (인증 필요)
+// @Description 콘텐츠 시청 중 재생 위치 업데이트 (인증 필요)
 // @Tags 콘텐츠
 // @Accept json
 // @Produce json
 // @Param id path int true "콘텐츠 ID"
 // @Param Authorization header string true "Bearer JWT 토큰"
-// @Param request body model.PlaybackPositionRequest true "재생 위치 정보"
-// @Success 200 {object} map[string]interface{} "업데이트 성공"
-// @Failure 400 {object} map[string]interface{} "유효하지 않은 요청"
-// @Failure 401 {object} map[string]interface{} "인증 실패"
-// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Param position body model.PlaybackPositionRequest true "재생 위치 정보"
+// @Success 200 {object} model.ApiResponse "업데이트 성공"
+// @Failure 400 {object} model.ErrorResponse "유효하지 않은 요청"
+// @Failure 401 {object} model.ErrorResponse "인증 필요"
+// @Failure 500 {object} model.ErrorResponse "서버 오류"
 // @Router /contents/{id}/playback [post]
 func handleUpdatePlaybackPosition(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -510,18 +511,18 @@ func handleUpdatePlaybackPosition(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
-// @Summary 최종 재생 위치 저장
+// @Summary 최종 시청 위치 저장
 // @Description 콘텐츠 시청 종료 시 최종 위치 저장 (인증 필요)
 // @Tags 콘텐츠
 // @Accept json
 // @Produce json
 // @Param id path int true "콘텐츠 ID"
 // @Param Authorization header string true "Bearer JWT 토큰"
-// @Param request body model.FinalPositionRequest true "최종 재생 위치 정보"
-// @Success 200 {object} map[string]interface{} "저장 성공"
-// @Failure 400 {object} map[string]interface{} "유효하지 않은 요청"
-// @Failure 401 {object} map[string]interface{} "인증 실패"
-// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Param position body model.FinalPositionRequest true "최종 위치 정보"
+// @Success 200 {object} model.ApiResponse "저장 성공"
+// @Failure 400 {object} model.ErrorResponse "유효하지 않은 요청"
+// @Failure 401 {object} model.ErrorResponse "인증 필요"
+// @Failure 500 {object} model.ErrorResponse "서버 오류"
 // @Router /contents/{id}/final-position [post]
 func handleSaveFinalPosition(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -576,17 +577,17 @@ func handleSaveFinalPosition(cfg *config.Config) gin.HandlerFunc {
 }
 
 // @Summary 시청 기록 업데이트
-// @Description 시청 기록 업데이트 (인증 필요)
+// @Description 콘텐츠 시청 기록 추가/업데이트 (인증 필요)
 // @Tags 콘텐츠
 // @Accept json
 // @Produce json
 // @Param id path int true "콘텐츠 ID"
 // @Param Authorization header string true "Bearer JWT 토큰"
-// @Param request body model.ViewingHistoryRequest true "시청 기록 정보"
-// @Success 200 {object} map[string]interface{} "업데이트 성공"
-// @Failure 400 {object} map[string]interface{} "유효하지 않은 요청"
-// @Failure 401 {object} map[string]interface{} "인증 실패"
-// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Param history body model.ViewingHistoryRequest true "시청 기록 정보"
+// @Success 200 {object} model.ApiResponse "업데이트 성공"
+// @Failure 400 {object} model.ErrorResponse "유효하지 않은 요청"
+// @Failure 401 {object} model.ErrorResponse "인증 필요"
+// @Failure 500 {object} model.ErrorResponse "서버 오류"
 // @Router /contents/{id}/history [post]
 func handleUpdateViewingHistory(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {

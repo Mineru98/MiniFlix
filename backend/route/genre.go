@@ -18,13 +18,13 @@ func SetupGenreRoutes(router *gin.RouterGroup, cfg *config.Config) {
 	}
 }
 
-// @Summary 모든 장르 목록 조회
-// @Description 모든 장르 정보 목록 조회
+// @Summary 장르 목록 조회
+// @Description 모든 장르 목록 조회
 // @Tags 장르
 // @Accept json
 // @Produce json
-// @Success 200 {array} model.Genre "장르 목록"
-// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Success 200 {object} model.ArrayResponse{data=[]model.Genre} "장르 목록"
+// @Failure 500 {object} model.ErrorResponse "서버 오류"
 // @Router /genres [get]
 func handleGetAllGenres(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {

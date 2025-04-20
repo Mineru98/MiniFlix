@@ -4,8 +4,9 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/jmoiron/sqlx"
 	"backend/model"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // UserService 사용자 관련 서비스 로직을 담당하는 구조체
@@ -31,7 +32,7 @@ func (s *UserService) CheckEmailExists(email string) (bool, error) {
 }
 
 // Register 새로운 사용자 등록
-func (s *UserService) Register(req *model.UserRegisterRequest) (*model.User, error) {
+func (s *UserService) Register(req *model.RegisterRequest) (*model.User, error) {
 	// 이메일 중복 확인
 	exists, err := s.CheckEmailExists(req.Email)
 	if err != nil {
@@ -69,7 +70,7 @@ func (s *UserService) GetUserByID(id int64) (*model.User, error) {
 }
 
 // UpdateUserInfo 사용자 정보 업데이트
-func (s *UserService) UpdateUserInfo(id int64, req *model.UserUpdateRequest) error {
+func (s *UserService) UpdateUserInfo(id int64, req *model.UpdateProfileRequest) error {
 	// 현재 비밀번호 확인을 위해 사용자 조회
 	user, err := model.GetUserByID(s.DB.DB, id)
 	if err != nil {
@@ -91,7 +92,7 @@ func (s *UserService) UpdateUserInfo(id int64, req *model.UserUpdateRequest) err
 }
 
 // ValidateLogin 로그인 정보 검증
-func (s *UserService) ValidateLogin(req *model.UserLoginRequest) (*model.User, error) {
+func (s *UserService) ValidateLogin(req *model.LoginRequest) (*model.User, error) {
 	// 사용자 조회
 	user, err := model.GetUserByEmail(s.DB.DB, req.Email)
 	if err != nil {
@@ -112,4 +113,4 @@ func (s *UserService) ValidateLogin(req *model.UserLoginRequest) (*model.User, e
 	}
 
 	return user, nil
-} 
+}

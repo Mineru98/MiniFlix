@@ -26,14 +26,14 @@ func SetupUserRoutes(router *gin.RouterGroup, cfg *config.Config) {
 }
 
 // @Summary 사용자 프로필 조회
-// @Description 로그인한 사용자의 프로필 정보 조회
+// @Description 로그인한 사용자의 프로필 정보 조회 (인증 필요)
 // @Tags 사용자
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "Bearer JWT 토큰"
-// @Success 200 {object} model.UserResponse "사용자 프로필 정보"
-// @Failure 401 {object} map[string]interface{} "인증 실패"
-// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Success 200 {object} model.ApiResponse{data=model.UserResponse} "사용자 프로필 정보"
+// @Failure 401 {object} model.ErrorResponse "인증 필요"
+// @Failure 500 {object} model.ErrorResponse "서버 오류"
 // @Router /users/profile [get]
 func handleGetUserProfile(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -68,23 +68,27 @@ func handleGetUserProfile(cfg *config.Config) gin.HandlerFunc {
 }
 
 // @Summary 사용자 프로필 업데이트
-// @Description 로그인한 사용자의 프로필 정보 업데이트
+// @Description 로그인한 사용자의 프로필 정보 업데이트 (인증 필요)
 // @Tags 사용자
 // @Accept json
 // @Produce json
-// @Param user body model.UserUpdateRequest true "업데이트할 사용자 정보"
 // @Param Authorization header string true "Bearer JWT 토큰"
-// @Success 200 {object} model.UserResponse "업데이트된 사용자 정보"
-// @Failure 400 {object} map[string]interface{} "요청 데이터 오류"
-// @Failure 401 {object} map[string]interface{} "인증 실패"
-// @Failure 403 {object} map[string]interface{} "비밀번호 불일치"
-// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Param request body model.UpdateProfileRequest true "업데이트할 프로필 정보"
+// @Success 200 {object} model.ApiResponse{data=model.UserResponse} "업데이트된 사용자 정보"
+// @Failure 400 {object} model.ErrorResponse "유효하지 않은 요청"
+// @Failure 401 {object} model.ErrorResponse "인증 필요"
+// @Failure 500 {object} model.ErrorResponse "서버 오류"
 // @Router /users/profile [put]
 func handleUpdateUserProfile(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var req model.UserUpdateRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 요청 데이터", "details": err.Error()})
+		// 사용자 ID 가져오기
+		userID := c.GetInt64("userID")
+
+		// 프로필 업데이트 요청 파싱
+		var updateRequest model.UpdateProfileRequest
+		if err := c.ShouldBindJSON(&updateRequest); err != nil {
+			log.Printf("프로필 업데이트 요청 파싱 실패: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "유효하지 않은 요청"})
 			return
 		}
 
@@ -96,14 +100,11 @@ func handleUpdateUserProfile(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		// 사용자 ID 가져오기
-		userID := c.GetInt64("userID")
-
 		// UserService 인스턴스 생성
 		userService := service.NewUserService(db)
 
 		// 사용자 정보 업데이트
-		if err := userService.UpdateUserInfo(userID, &req); err != nil {
+		if err := userService.UpdateUserInfo(userID, &updateRequest); err != nil {
 			if err.Error() == "현재 비밀번호가 일치하지 않습니다" {
 				c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 				return
@@ -130,14 +131,14 @@ func handleUpdateUserProfile(cfg *config.Config) gin.HandlerFunc {
 }
 
 // @Summary 시청 기록 조회
-// @Description 로그인한 사용자의 시청 기록 조회
+// @Description 로그인한 사용자의 시청 기록 조회 (인증 필요)
 // @Tags 사용자
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "Bearer JWT 토큰"
-// @Success 200 {array} model.ViewingHistoryResponse "시청 기록 목록"
-// @Failure 401 {object} map[string]interface{} "인증 실패"
-// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Success 200 {object} model.ArrayResponse{data=[]model.ViewingHistoryResponse} "시청 기록 목록"
+// @Failure 401 {object} model.ErrorResponse "인증 필요"
+// @Failure 500 {object} model.ErrorResponse "서버 오류"
 // @Router /users/viewing-history [get]
 func handleGetViewingHistory(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {

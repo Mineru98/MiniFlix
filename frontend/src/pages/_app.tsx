@@ -26,6 +26,9 @@ export default function App({ Component, pageProps }: AppProps) {
 
   // 클라이언트 측에서 동적으로 컴포넌트 렌더링을 위한 상태
   const [isMounted, setIsMounted] = useState(false);
+  
+  // 비디오 플레이어 화면인지 확인하는 상태
+  const isWatchPage = router.pathname.startsWith('/watch/');
 
   useEffect(() => {
     // 컴포넌트가 마운트되면 상태 업데이트
@@ -68,9 +71,9 @@ export default function App({ Component, pageProps }: AppProps) {
         <SplashPage isLoading={isLoading} />
       ) : (
         <>
-          {isAuthenticated && <Header />}
+          {isAuthenticated && <Header className={isWatchPage ? 'hide' : ''} />}
           <Component {...pageProps} />
-          {isAuthenticated && <NavigationBar />}
+          {isAuthenticated && <NavigationBar className={isWatchPage ? 'hide' : ''} />}
         </>
       )}
     </ToastProvider>

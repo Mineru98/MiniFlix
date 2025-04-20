@@ -27,7 +27,11 @@ import {
   DropdownDivider
 } from './styles';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  className?: string;
+}
+
+const Header: React.FC<HeaderProps> = ({ className }) => {
   const router = useRouter();
   const [showSearch, setShowSearch] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -133,7 +137,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <HeaderContainer>
+    <HeaderContainer className={className}>
       <Logo>
         <Link href="/">
           <img src="/images/netflix-logo.svg" alt="Netflix" />

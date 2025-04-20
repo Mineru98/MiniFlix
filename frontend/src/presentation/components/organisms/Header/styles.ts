@@ -15,8 +15,12 @@ export const HeaderContainer = styled.header`
   );
   padding: 0.75rem 4%;
   z-index: 100;
-  transition: background-color 0.3s;
+  transition: all 0.5s ease;
   height: 68px;
+
+  &.hide {
+    transform: translateY(-100%);
+  }
 
   @media (max-width: 768px) {
     padding: 0.5rem 3%;

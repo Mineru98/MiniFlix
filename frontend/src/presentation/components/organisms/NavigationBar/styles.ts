@@ -11,6 +11,11 @@ export const NavContainer = styled.nav`
   background-color: #121212;
   padding: 0.75rem 0;
   z-index: 50;
+  transition: all 0.5s ease;
+
+  &.hide {
+    transform: translateY(100%);
+  }
 
   @media (min-width: 769px) {
     display: none;

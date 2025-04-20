@@ -8,9 +8,13 @@ import {
   NotificationBadge
 } from './styles';
 
-const NavigationBar: React.FC = () => {
+interface NavigationBarProps {
+  className?: string;
+}
+
+const NavigationBar: React.FC<NavigationBarProps> = ({ className }) => {
   return (
-    <NavContainer>
+    <NavContainer className={className}>
       <NavItem className="active">
         <IconWrapper>
           <Home size={20} strokeWidth={2.5} />

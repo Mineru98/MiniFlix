@@ -2,7 +2,6 @@ package model
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 )
 
@@ -12,7 +11,7 @@ type Content struct {
 	ID           int64     `db:"id" json:"id"`
 	Title        string    `db:"title" json:"title" binding:"required"`
 	Description  string    `db:"description" json:"description"`
-	ThumbnailURL string    `db:"thumbnail_url" json:"-"` // JSON으로 직접 출력하지 않음
+	ThumbnailURL string    `db:"thumbnail_url" json:"thumbnail_url"`
 	VideoURL     string    `db:"video_url" json:"video_url"`
 	Duration     int       `db:"duration" json:"duration"`
 	ReleaseYear  int       `db:"release_year" json:"release_year"`
@@ -48,11 +47,6 @@ type ContentDetailResponse struct {
 	LastPosition int     `json:"last_position"`
 }
 
-// DynamicThumbnailURL 동적으로 썸네일 URL 생성
-func DynamicThumbnailURL(contentID int64) string {
-	return fmt.Sprintf("https://via.assets.so/movie.png?id=%d&q=95&w=160&h=220&fit=fill", contentID)
-}
-
 // Genre 장르 모델
 // @Description 장르 정보를 담는 모델
 type Genre struct {
@@ -79,7 +73,7 @@ func GetContentList(db *sql.DB, userID int64) ([]ContentListResponse, error) {
 	// 기본 콘텐츠 쿼리
 	rows, err := db.Query(`
 		SELECT 
-			c.id, c.title, c.release_year
+			c.id, c.title, c.thumbnail_url, c.release_year
 		FROM 
 			Contents c
 		ORDER BY 
@@ -96,11 +90,9 @@ func GetContentList(db *sql.DB, userID int64) ([]ContentListResponse, error) {
 	// 기본 콘텐츠 정보 읽기
 	for rows.Next() {
 		var content ContentListResponse
-		if err := rows.Scan(&content.ID, &content.Title, &content.ReleaseYear); err != nil {
+		if err := rows.Scan(&content.ID, &content.Title, &content.ThumbnailURL, &content.ReleaseYear); err != nil {
 			return nil, err
 		}
-		// 동적 썸네일 URL 설정
-		content.ThumbnailURL = DynamicThumbnailURL(content.ID)
 		contentList = append(contentList, content)
 		contentIDs = append(contentIDs, content.ID)
 	}
@@ -164,22 +156,19 @@ func GetContentDetail(db *sql.DB, contentID, userID int64) (*ContentDetailRespon
 	var content ContentDetailResponse
 	err := db.QueryRow(`
 		SELECT 
-			id, title, description, video_url, duration, release_year
+			id, title, description, thumbnail_url, video_url, duration, release_year
 		FROM 
 			Contents
 		WHERE 
 			id = ?
 	`, contentID).Scan(
 		&content.ID, &content.Title, &content.Description,
-		&content.VideoURL, &content.Duration, &content.ReleaseYear,
+		&content.ThumbnailURL, &content.VideoURL, &content.Duration, &content.ReleaseYear,
 	)
 
 	if err != nil {
 		return nil, err
 	}
-
-	// 동적 썸네일 URL 설정
-	content.ThumbnailURL = DynamicThumbnailURL(contentID)
 
 	// 장르 정보 조회
 	genreRows, err := db.Query(`

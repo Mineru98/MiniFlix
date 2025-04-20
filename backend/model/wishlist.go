@@ -54,7 +54,7 @@ func ToggleWishlist(db *sql.DB, userID, contentID int64) (bool, error) {
 func GetWishlist(db *sql.DB, userID int64) ([]ContentListResponse, error) {
 	rows, err := db.Query(`
 		SELECT 
-			c.id, c.title, c.release_year
+			c.id, c.title, c.thumbnail_url, c.release_year
 		FROM 
 			Contents c
 		JOIN 
@@ -75,11 +75,9 @@ func GetWishlist(db *sql.DB, userID int64) ([]ContentListResponse, error) {
 	// 기본 콘텐츠 정보 읽기
 	for rows.Next() {
 		var content ContentListResponse
-		if err := rows.Scan(&content.ID, &content.Title, &content.ReleaseYear); err != nil {
+		if err := rows.Scan(&content.ID, &content.Title, &content.ThumbnailURL, &content.ReleaseYear); err != nil {
 			return nil, err
 		}
-		// 동적 썸네일 URL 설정
-		content.ThumbnailURL = DynamicThumbnailURL(content.ID)
 		content.IsWishlisted = true // 찜 목록이므로 모두 true
 		wishlist = append(wishlist, content)
 		contentIDs = append(contentIDs, content.ID)

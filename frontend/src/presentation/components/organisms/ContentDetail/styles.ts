@@ -1,32 +1,46 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
+
+const slideUpAnimation = keyframes`
+  from {
+    transform: translateY(20px);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+`;
 
 export const DetailContainer = styled.div`
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 50;
+  width: 100%;
+  height: 100%;
   background-color: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(5px);
+  z-index: 50;
   overflow-y: auto;
+  padding: 5vh 0;
 `;
 
 export const DetailContent = styled.div`
-  max-width: 950px;
-  margin: 5vh auto;
-  background: #000;
+  position: relative;
+  width: 100%;
+  max-width: 850px;
+  margin: 0 auto;
+  background-color: #181818;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  animation: ${slideUpAnimation} 0.4s ease-out forwards;
 `;
 
 export const HeroSection = styled.div`
   position: relative;
   width: 100%;
-  height: 400px;
+  height: 450px;
   background-size: cover;
   background-position: center top;
+  background-repeat: no-repeat;
 
   &::after {
     content: "";
@@ -41,27 +55,28 @@ export const HeroSection = styled.div`
 
 export const CloseButton = styled.button`
   position: absolute;
-  top: 20px;
-  right: 20px;
-  background: rgba(33, 33, 33, 0.8);
+  top: 15px;
+  right: 15px;
+  background-color: rgba(0, 0, 0, 0.7);
   color: white;
   border: none;
-  border-radius: 50%;
   width: 36px;
   height: 36px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 10;
+  transition: background-color 0.2s;
 
   &:hover {
-    background: rgba(55, 55, 55, 0.8);
+    background-color: rgba(0, 0, 0, 0.9);
   }
 `;
 
 export const ContentInfoSection = styled.div`
-  padding: 20px;
+  padding: 2rem;
   position: relative;
   margin-top: -80px;
   z-index: 10;
@@ -69,8 +84,8 @@ export const ContentInfoSection = styled.div`
 
 export const ContentActions = styled.div`
   display: flex;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
 `;
 
 export const RelatedContent = styled.div`
@@ -112,31 +127,26 @@ export const ThumbnailItem = styled.div`
 export const ActionButton = styled.button`
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 16px;
+  gap: 0.5rem;
+  padding: 0.5rem 1.2rem;
   border-radius: 4px;
-  font-weight: 600;
+  font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
 
   &.primary {
-    background-color: #e50913;
-    color: white;
-    border: none;
-
+    background-color: white;
+    color: black;
     &:hover {
-      background-color: #f40612;
+      background-color: rgba(255, 255, 255, 0.8);
     }
   }
 
   &.secondary {
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.3);
     color: white;
-    border: none;
-
     &:hover {
-      background-color: rgba(255, 255, 255, 0.25);
+      background-color: rgba(255, 255, 255, 0.2);
     }
   }
 `;
@@ -145,16 +155,23 @@ export const IconButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(42, 42, 42, 0.7);
+  border: 2px solid rgba(255, 255, 255, 0.5);
   color: white;
-  border: none;
   cursor: pointer;
+  transition: all 0.2s;
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.25);
+    background-color: rgba(42, 42, 42, 0.9);
+    transform: scale(1.05);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `;
 
@@ -162,7 +179,7 @@ export const LoadingWrapper = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 300px;
+  height: 400px;
 `;
 
 export const ErrorWrapper = styled.div`
@@ -170,7 +187,7 @@ export const ErrorWrapper = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 300px;
+  height: 400px;
   color: white;
   padding: 20px;
   text-align: center;

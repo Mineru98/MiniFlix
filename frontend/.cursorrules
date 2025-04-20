@@ -53,5 +53,8 @@ MiniFlix는 Next.js 기반의 비디오 스트리밍 서비스 프론트엔드�
 - 하나의 컴포넌트 폴더 아래에는 기본적으로 다음 세가지 파일로 구성이 됩니다.
     - `index.tsx`: 컴포넌트 내용
     - `types.ts`: 컴포넌트 타입 정의
-    - `styles.ts`: 컴포넌트 스타일 정의
+    - `styles.ts`: 컴포넌트 스타일 정의 : styled-components 사용
 - 상수의 경우는 `constants.ts` 파일을 만들어서 사용합니다.
+
+## React 컴포넌트 비즈니스 로직 가이드라인
+- 가능하면 React Lifecycle 에서 함수들은 useCallback 을 사용합니다.

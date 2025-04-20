@@ -58,10 +58,16 @@ const ContentCard: React.FC<ContentCardProps> = ({
     router.push(`/content/${content.id}`);
   }, [router, content.id]);
 
+  // 콘텐츠 재생 페이지로 이동하는 핸들러
+  const handlePlayClick = useCallback(() => {
+    router.push(`/watch/${content.id}`);
+  }, [router, content.id]);
+
   return (
     <CardContainer 
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={handlePlayClick}
     >
       {hasOriginalImage ? (
         <>

@@ -1,16 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { PlayCircle, Plus, Info, ImageIcon } from 'lucide-react';
 import { BannerContainer, BannerOverlay, BannerImage, BannerContent, 
   BannerTitle, BannerRank, BannerControls } from './styles';
 import { BannerProps } from './types';
+import { useRouter } from 'next/router';
 
 const Banner: React.FC<BannerProps> = ({ 
   content, 
   fallbackImageUrl = 'https://via.assets.so/movie.png?id=1&q=95&w=160&h=220&fit=fill'
 }) => {
+  const router = useRouter();
   const [imageError, setImageError] = useState(false);
   const hasOriginalImage = !!content.thumbnail_url && !imageError;
   const hasFallbackImage = !!fallbackImageUrl;
+
+  const handlePlayClick = useCallback(() => {
+    router.push(`/watch/${content.id}`);
+  }, [router, content.id]);
 
   return (
     <BannerContainer>
@@ -35,7 +41,10 @@ const Banner: React.FC<BannerProps> = ({
         <BannerTitle>{content.title || 'Movie Title'}</BannerTitle>
         
         <BannerControls>
-          <button className="bg-white text-black flex items-center gap-2 px-6 py-2 rounded">
+          <button 
+            className="bg-white text-black flex items-center gap-2 px-6 py-2 rounded"
+            onClick={handlePlayClick}
+          >
             <PlayCircle size={20} />
             <span>재생</span>
           </button>

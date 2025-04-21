@@ -613,13 +613,13 @@ docker-compose down
 ```bash
 # 프론트엔드 개발 서버 실행
 cd frontend
-npm install
-npm run dev
+yarn
+yarn dev
 
 # 백엔드 개발 서버 실행
 cd backend
-go mod download
-air
+go mod tidy
+./swag init && go run main.go    
 ```
 
 ## 접속 정보
